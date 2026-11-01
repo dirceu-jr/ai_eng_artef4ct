@@ -1,1 +1,11 @@
 data/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.DS_Store
+.pytest_cache/
+*.db
+*.sqlite3
