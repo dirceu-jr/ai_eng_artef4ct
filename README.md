@@ -203,6 +203,8 @@ Antigravity com Gemini 4 Argon.
 No "Modelo / Provedor" podemos utilizar o Google Gemini mais atualizado: "gemini-3.8-flash".
 Para o cálculo do frete, faça a avaliação de utilizar a API do "Melhor Envio".
 
+3 - Legal, funcionou. Mas na interface web do Streamlit, quando o agente responde algo com preço em Reais Brasileiro (R$) está ficando quebrada a formatação.
+
 ### Perguntas de Alinhamento Arquitetural
 
 - Qual abordagem arquitetural você prefere para o agente e o acesso aos dados/políticas?

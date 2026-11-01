@@ -59,3 +59,12 @@ def test_agent_tool_calling_loop_and_memory_persistence(tmp_path: Path) -> None:
     assert "# Teste Takamine" in md
     assert "tool_obter_detalhes_produto" in md
 
+
+def test_escape_streamlit_markdown_currency() -> None:
+    from app import escape_streamlit_markdown
+
+    raw = "De R$ 2.399,00 por R$ 1.967,18 (já escapado: R\\$ 100,00)."
+    escaped = escape_streamlit_markdown(raw)
+    assert escaped == "De R\\$ 2.399,00 por R\\$ 1.967,18 (já escapado: R\\$ 100,00)."
+
+

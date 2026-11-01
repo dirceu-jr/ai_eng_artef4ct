@@ -2,11 +2,19 @@
 
 from __future__ import annotations
 
+import re
 import streamlit as st
 
 from src.agent import EmporioMusicaAgent
 from src.config import GEMINI_API_KEY, GEMINI_MODEL
 from src.memory import ConversationMemory
+
+
+def escape_streamlit_markdown(text: str) -> str:
+    """Escapa o símbolo '$' (ex.: 'R$') para evitar que o KaTeX do Streamlit interprete preços como fórmulas LaTeX."""
+    if not text:
+        return ""
+    return re.sub(r"(?<!\\)\$", r"\$", text)
 
 st.set_page_config(
     page_title="Empório da Música — Assistente Virtual",
@@ -93,14 +101,14 @@ def main() -> None:
                     for tc in msg["tool_calls"]:
                         st.markdown(f"**`{tc['name']}`** ({tc.get('duration_ms', 0)} ms)")
                         st.json({"args": tc.get("args"), "result": tc.get("result")})
-            st.markdown(msg["content"])
+            st.markdown(escape_streamlit_markdown(msg["content"]))
 
     user_prompt = st.chat_input("Digite sua mensagem sobre instrumentos, preços, políticas ou pedidos...")
     active_prompt = selected_quick_prompt or user_prompt
 
     if active_prompt:
         with st.chat_message("user", avatar="👤"):
-            st.markdown(active_prompt)
+            st.markdown(escape_streamlit_markdown(active_prompt))
 
         with st.chat_message("assistant", avatar="🎸"):
             with st.spinner("Consultando catálogo e políticas da Empório da Música..."):
@@ -116,7 +124,7 @@ def main() -> None:
                             for tc in turn.tool_calls:
                                 st.markdown(f"**`{tc['name']}`** ({tc.get('duration_ms', 0)} ms)")
                                 st.json({"args": tc.get("args"), "result": tc.get("result")})
-                    st.markdown(turn.text)
+                    st.markdown(escape_streamlit_markdown(turn.text))
                 except Exception as exc:
                     st.error(f"Erro ao processar mensagem: {exc}")
 
