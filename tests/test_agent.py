@@ -58,3 +58,4 @@ def test_agent_tool_calling_loop_and_memory_persistence(tmp_path: Path) -> None:
     md = memory.export_session_markdown("sessao_teste", scenario_title="Teste Takamine")
     assert "# Teste Takamine" in md
     assert "tool_obter_detalhes_produto" in md
+

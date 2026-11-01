@@ -141,3 +141,4 @@ class OrderDetailResponse(BaseModel):
     notes: str | None = None
     items: list[OrderItemDetail] = Field(default_factory=list)
     return_eligibility: ReturnEligibility
+

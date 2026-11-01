@@ -334,3 +334,4 @@ def init_database(data_dir: Path = DATA_DIR, db_path: Path = DB_PATH, force_rebu
     conn.commit()
     conn.close()
     return db_path
+

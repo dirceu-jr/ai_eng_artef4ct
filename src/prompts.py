@@ -72,3 +72,4 @@ def build_system_prompt(reference_date_str: str | None = None) -> str:
 ### 3. MANUAL OFICIAL DE POLÍTICAS E PROCEDIMENTOS DA LOJA
 {policies_text}
 """
+

@@ -70,3 +70,4 @@ def test_melhor_envio_api_integration_mocked() -> None:
         assert len(res.options) == 2
         assert res.options[0].price_brl == 68.50
         assert res.options[1].carrier == "Jadlog"
+

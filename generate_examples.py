@@ -416,3 +416,4 @@ if __name__ == "__main__":
     files = generate_all_examples()
     for f in files:
         print(f"Gerado: {f}")
+

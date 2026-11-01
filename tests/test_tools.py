@@ -100,3 +100,4 @@ def test_executar_sql_leitura_bloqueia_escrita() -> None:
 
     blocked_res = executar_sql_leitura("DROP TABLE products")
     assert blocked_res["success"] is False
+

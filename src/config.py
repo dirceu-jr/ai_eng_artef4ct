@@ -42,3 +42,4 @@ def get_reference_date() -> date:
         return date.fromisoformat(REFERENCE_DATE_STR)
     except ValueError:
         return date(2026, 3, 25)
+

@@ -63,3 +63,4 @@ def test_database_ingestion_and_anomalies(tmp_path: Path) -> None:
     assert prod_95["pix_discount_applied"] == 1
 
     conn.close()
+

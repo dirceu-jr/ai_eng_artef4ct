@@ -822,3 +822,4 @@ def executar_sql_leitura(
             "error": f"Erro ao executar SQL: {exc}",
             "rows": [],
         }
+

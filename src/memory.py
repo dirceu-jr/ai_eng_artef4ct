@@ -146,3 +146,4 @@ class ConversationMemory:
             lines.append("---\n")
 
         return "\n".join(lines).strip() + "\n"
+

@@ -260,3 +260,4 @@ class EmporioMusicaAgent:
             model_used=model_used,
             tool_calls=executed_tool_calls,
         )
+
