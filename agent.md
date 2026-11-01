@@ -1,0 +1,1 @@
+- Ignore arquivos `.pdf`. Eu já processei os arquivos e a informação está disponível nos arquivos markdown (`.md`).
