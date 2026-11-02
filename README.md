@@ -197,8 +197,6 @@ Este projeto foi desenvolvido em *pair programming* com o **Antigravity IDE 2.6.
 
 ### Prompts Utilizados
 
-Antigravity com Gemini 4 Argon.
-
 1 - Estou participando de um processo seletivo e preciso fazer um desafio técnico. Leia o arquivo `desafio_tecnico_ai_eng_artef4ct.md` e siga as instruções. Antes de escrever código, monte um plano de ação com algumas opções de decisões técnicas.
 
 2 - Parece legal. Salve o plano de implementação na raiz do projeto.
@@ -211,7 +209,7 @@ Para o cálculo do frete, faça a avaliação de utilizar a API do "Melhor Envio
 
 5 - Estou pensando em não commitar a pasta `/data` e deixar para o avaliador usar a pasta original e rodar um comando após a configuração da chave do AI Studio no `.env` que rode um script Python bem simples que manda o PDF para o "gemini-3.5-flash-lite" transformar em Markdown.
 
-6 - Estou pensando em não commitar a pasta `/data` e deixar para o avaliador usar a pasta original e rodar um comando após a configuração da chave do AI Studio no `.env` que rode um script Python bem simples que manda o PDF para o "gemini-3.5-flash-lite" transformar em Markdown.
+6 - O nome original do arquivo de políticas na pasta `/data` é `políticas_da_loja.pdf` (com acento no í). Vamos antes de mais nada, no arquivo `convert_pdf.py` renomear para `politicas_da_loja.pdf` (sem acento).
 
 7 - Onde está a variável de limite de etapas internas?
 
