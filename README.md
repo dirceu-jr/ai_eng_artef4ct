@@ -30,7 +30,7 @@ O agente combina **Function Calling determinístico sobre SQLite**, **injeção 
   - `data/desafio_tecnico_ai_eng - orders.csv`
   - `data/desafio_tecnico_ai_eng - products.csv`
   - `data/desafio_tecnico_ai_eng - promotions.csv`
-  - `data/politicas_da_loja.pdf` (será convertido em `data/politicas_da_loja.md` no Passo 3)
+  - `data/políticas_da_loja.pdf` (será automaticamente renomeado para `data/politicas_da_loja.pdf` sem acento e convertido em `data/politicas_da_loja.md` no Passo 3)
 
 ### Passo 1: Criar ambiente virtual e instalar dependências
 
@@ -223,11 +223,4 @@ Para o cálculo do frete, faça a avaliação de utilizar a API do "Melhor Envio
 - Qual interface de interação você prefere entregar?
     - CLI Interativa (Rich) + Web UI (Streamlit com inspetor de Tool Calls) + Persistência SQLite/JSON
 
-
 ---
-
-### PDF to Markdown
-
-Testei usar os CLI `pdftotext`, `pdf-to-markdown` e `markitdown` mas não gostei do resultado.
-
-A ferramenta: https://www.ilovepdf.com/pt/pdf-para-markdown foi a melhor mas não é indicada para dados sensíveis.

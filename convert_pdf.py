@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 import sys
 from typing import Any
+import unicodedata
 
 from google import genai
 from google.genai import types
@@ -21,6 +22,29 @@ PDF_TO_MD_PROMPT = (
     "telefones, e-mails, CEPs e regras de negócio sem omitir nenhuma informação "
     "e sem adicionar comentários introdutórios ou conclusivos."
 )
+
+
+def _strip_accents(value: str) -> str:
+    nfkd = unicodedata.normalize("NFKD", value)
+    return "".join(ch for ch in nfkd if not unicodedata.combining(ch)).lower()
+
+
+def normalize_policies_pdf_filename(data_dir: Path = DATA_DIR) -> Path:
+    """
+    Se encontrar `políticas_da_loja.pdf` (com acento, em NFC ou NFD do macOS) na pasta `data/`,
+    renomeia-o para `politicas_da_loja.pdf` (sem acento) antes do processamento.
+    """
+    target_pdf = data_dir / "politicas_da_loja.pdf"
+    if not data_dir.exists():
+        return target_pdf
+
+    for entry in data_dir.iterdir():
+        if entry.is_file() and _strip_accents(entry.name) == "politicas_da_loja.pdf":
+            if entry != target_pdf:
+                entry.rename(target_pdf)
+            break
+
+    return target_pdf
 
 
 def _strip_markdown_fences(text: str) -> str:
@@ -38,9 +62,17 @@ def convert_pdf_to_markdown(
     model: str = PDF_CONVERSION_MODEL,
     client: Any | None = None,
 ) -> Path:
-    """Envia o PDF para o Gemini (`gemini-3.5-flash-lite`) e salva o Markdown resultante."""
-    source_pdf = pdf_path or (DATA_DIR / "politicas_da_loja.pdf")
-    target_md = md_path or (DATA_DIR / "politicas_da_loja.md")
+    """Renomeia `políticas_da_loja.pdf` para `politicas_da_loja.pdf` (se necessário), envia ao Gemini e salva o `.md`."""
+    if pdf_path is not None:
+        normalize_policies_pdf_filename(pdf_path.parent)
+        if not pdf_path.exists() and _strip_accents(pdf_path.name) == "politicas_da_loja.pdf":
+            source_pdf = pdf_path.parent / "politicas_da_loja.pdf"
+        else:
+            source_pdf = pdf_path
+    else:
+        source_pdf = normalize_policies_pdf_filename(DATA_DIR)
+
+    target_md = md_path or (source_pdf.parent / "politicas_da_loja.md")
 
     if not source_pdf.exists():
         raise FileNotFoundError(

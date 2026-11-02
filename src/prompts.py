@@ -25,16 +25,16 @@ def load_store_policies(data_dir: Path = DATA_DIR) -> str:
     if md_path.exists():
         return md_path.read_text(encoding="utf-8").strip()
 
-    pdf_path = data_dir / "politicas_da_loja.pdf"
-    if pdf_path.exists():
-        try:
-            from convert_pdf import convert_pdf_to_markdown
+    try:
+        from convert_pdf import convert_pdf_to_markdown, normalize_policies_pdf_filename
 
+        pdf_path = normalize_policies_pdf_filename(data_dir)
+        if pdf_path.exists():
             convert_pdf_to_markdown(pdf_path=pdf_path, md_path=md_path)
             if md_path.exists():
                 return md_path.read_text(encoding="utf-8").strip()
-        except Exception:
-            pass
+    except Exception:
+        pass
 
     return DEFAULT_POLICIES_FALLBACK
 

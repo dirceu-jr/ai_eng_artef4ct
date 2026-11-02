@@ -71,8 +71,9 @@ def test_escape_streamlit_markdown_currency() -> None:
 def test_convert_pdf_to_markdown_with_fake_client(tmp_path: Path) -> None:
     from convert_pdf import convert_pdf_to_markdown
 
-    dummy_pdf = tmp_path / "politicas_da_loja.pdf"
-    dummy_pdf.write_bytes(b"%PDF-1.4 fake pdf bytes")
+    # Simula o nome original com acento ('políticas_da_loja.pdf') para testar a renomeação automática
+    accented_pdf = tmp_path / "políticas_da_loja.pdf"
+    accented_pdf.write_bytes(b"%PDF-1.4 fake pdf bytes")
     target_md = tmp_path / "politicas_da_loja.md"
 
     class FakePdfClient:
@@ -83,11 +84,13 @@ def test_convert_pdf_to_markdown_with_fake_client(tmp_path: Path) -> None:
                 return SimpleNamespace(text="```markdown\n## EMPÓRIO DA MÚSICA\nHorário: 09:00 às 18:00\n```")
 
     out_path = convert_pdf_to_markdown(
-        pdf_path=dummy_pdf,
+        pdf_path=tmp_path / "politicas_da_loja.pdf",
         md_path=target_md,
         client=FakePdfClient(),
     )
     assert out_path == target_md
+    assert (tmp_path / "politicas_da_loja.pdf").exists()
+    assert not accented_pdf.exists()
     content = target_md.read_text(encoding="utf-8")
     assert content.startswith("## EMPÓRIO DA MÚSICA")
     assert "```" not in content
