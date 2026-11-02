@@ -213,6 +213,10 @@ Para o cálculo do frete, faça a avaliação de utilizar a API do "Melhor Envio
 
 6 - Estou pensando em não commitar a pasta `/data` e deixar para o avaliador usar a pasta original e rodar um comando após a configuração da chave do AI Studio no `.env` que rode um script Python bem simples que manda o PDF para o "gemini-3.5-flash-lite" transformar em Markdown.
 
+7 - Onde está a variável de limite de etapas internas?
+
+8 - Sim, vamos expor a variável de limite de etapas internas no `src/config.py` e no `.env.example`.
+
 ### Perguntas de Alinhamento Arquitetural
 
 - Qual abordagem arquitetural você prefere para o agente e o acesso aos dados/políticas?
