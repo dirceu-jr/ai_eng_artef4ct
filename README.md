@@ -1,4 +1,4 @@
-# Empório da Música — Agente de Atendimento
+# Agente de Atendimento - Empório da Música
 
 Agente conversacional em Python desenvolvido para auxiliar a equipe de atendimento.
 
@@ -83,7 +83,7 @@ python -m pytest -v
 
 ---
 
-## 🏗️ 2. Arquitetura e Justificativa das Decisões Técnicas
+## 2. Arquitetura e Justificativa das Decisões Técnicas
 
 ```mermaid
 flowchart TD
@@ -122,7 +122,7 @@ flowchart TD
 
 ---
 
-## 🔍 3. Tratamento de Dados, Casos de Borda e Premissas Assumidas
+## 3. Tratamento de Dados, Casos de Borda e Premissas Assumidas
 
 Durante a análise exploratória dos arquivos em `data/`, mapeamos e tratamos os seguintes casos de borda:
 
@@ -145,7 +145,7 @@ Durante a análise exploratória dos arquivos em `data/`, mapeamos e tratamos os
 
 ---
 
-## 📦 4. Avaliação Técnica: API do Melhor Envio para Frete
+## 4. Avaliação Técnica: API do Melhor Envio para Frete
 
 Avaliamos e implementamos a integração com a API v2 do **Melhor Envio** (`POST /api/v2/me/shipment/calculate`) em `src/shipping.py`:
 
@@ -156,7 +156,7 @@ Avaliamos e implementamos a integração com a API v2 do **Melhor Envio** (`POST
 
 ---
 
-## 💬 5. Exemplos de Interação com o Agente
+## 5. Exemplos de Interação com o Agente
 
 Na pasta [`examples/`](./examples) estão disponíveis **5 conversas completas** em Markdown (com registro das ferramentas invocadas e argumentos passados pelo agente), geradas e validadas sobre os dados reais do banco:
 
@@ -168,7 +168,7 @@ Na pasta [`examples/`](./examples) estão disponíveis **5 conversas completas**
 
 ---
 
-## ⚠️ 6. Limitações Conhecidas e O Que Faria com Mais Tempo
+## 6. Limitações Conhecidas e O Que Faria com Mais Tempo
 
 - **Autenticação real do titular do pedido (LGPD)**: Atualmente, a consulta de pedidos valida o número do pedido ou nome/e-mail/telefone informado na conversa e mascara o e-mail no retorno. Em produção no WhatsApp, integraríamos um fluxo de confirmação via token OTP ou validação automática do número de telefone remetente na API oficial do WhatsApp Business.
 - **Busca Semântica Híbrida (BM25 + Embeddings)**: Para um catálogo de 65 itens, a busca normalizada com expansão de sinônimos e filtros estruturados em SQLite tem latência < 5ms e alta precisão. Caso o catálogo crescesse para dezenas de milhares de itens, adicionaríamos busca vetorial (`sqlite-vec` ou `pgvector`) combinada com *Full-Text Search* (FTS5).
@@ -176,22 +176,14 @@ Na pasta [`examples/`](./examples) estão disponíveis **5 conversas completas**
 
 ---
 
-## 🤖 7. Uso de Assistentes de Código e Registro do Workflow
+## 7. Uso de Assistentes de Código e Registro do Workflow
 
-Este projeto foi desenvolvido em *pair programming* com o **Antigravity (Google DeepMind)** utilizando o modelo **Gemini 4 Argon**.
+Este projeto foi desenvolvido em *pair programming* com o **Antigravity IDE 2.6.0** utilizando o modelo **Gemini 4 Argon**.
 
 ### Workflow Utilizado
 1. **Exploração e Diagnóstico Antes do Código**: O assistente foi instruído a ler o enunciado e auditar os arquivos CSV e o manual de políticas antes de escrever qualquer código, revelando as armadilhas de dados (`stock_quantity = 0` em produto ativo, `status = discontinued` com estoque 13, promoções expiradas e conflito entre Tabela 3 e Seção 3.1).
 2. **Alinhamento de Decisões Arquiteturais**: Elaboração de um plano de ação (`implementation_plan.md`) com múltiplas alternativas técnicas e avaliação específica da API do Melhor Envio.
 3. **Desenvolvimento Incremental Orientado a Testes (`pytest`)**: Implementação modular em etapas (ingestão SQLite $\rightarrow$ módulo de frete $\rightarrow$ tools de negócio $\rightarrow$ agente Gemini $\rightarrow$ interfaces CLI/Streamlit $\rightarrow$ exemplos e documentação), validando cada camada com testes automatizados.
-
----
-
-### Preâmbulo (Notas Originais de Preparação dos Arquivos)
-
-Testei usar os CLI `pdftotext`, `pdf-to-markdown` e `markitdown` mas não gostei do resultado.
-
-A ferramenta: https://www.ilovepdf.com/pt/pdf-para-markdown foi a melhor mas não é indicada para dados sensíveis.
 
 ### Prompts Utilizados
 
@@ -211,9 +203,21 @@ Para o cálculo do frete, faça a avaliação de utilizar a API do "Melhor Envio
 
 - Qual abordagem arquitetural você prefere para o agente e o acesso aos dados/políticas?
     - Híbrida: Tools de negócio sobre SQLite + Políticas completas no contexto + Fallback SQL read-only
+
 - Qual framework de orquestração em Python você prefere utilizar?
     - SDK Nativo / Leve + Pydantic (sem LangChain/LangGraph, código puro e direto)
+
 - Qual provedor de LLM você tem chave disponível (ou prefere usar como principal)?
     - Apenas Google Gemini (ex.: gemini-2.5-flash / gemini-3.8-flash via Google AI Studio)
+
 - Qual interface de interação você prefere entregar?
-    - (Recommended) CLI Interativa (Rich) + Web UI (Streamlit com inspetor de Tool Calls) + Persistência SQLite/JSON
+    - CLI Interativa (Rich) + Web UI (Streamlit com inspetor de Tool Calls) + Persistência SQLite/JSON
+
+
+---
+
+### PDF to Markdown
+
+Testei usar os CLI `pdftotext`, `pdf-to-markdown` e `markitdown` mas não gostei do resultado.
+
+A ferramenta: https://www.ilovepdf.com/pt/pdf-para-markdown foi a melhor mas não é indicada para dados sensíveis.
