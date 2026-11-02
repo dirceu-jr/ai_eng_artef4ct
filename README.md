@@ -209,6 +209,10 @@ Para o cálculo do frete, faça a avaliação de utilizar a API do "Melhor Envio
 
 4 - Vamos remover o fallback model (gemini-2.5-flash). Na lista de modelos disponíveis vamos deixar somente: "gemini-3.8-flash" e "gemini-3.5-flash-lite".
 
+5 - Estou pensando em não commitar a pasta `/data` e deixar para o avaliador usar a pasta original e rodar um comando após a configuração da chave do AI Studio no `.env` que rode um script Python bem simples que manda o PDF para o "gemini-3.5-flash-lite" transformar em Markdown.
+
+6 - Estou pensando em não commitar a pasta `/data` e deixar para o avaliador usar a pasta original e rodar um comando após a configuração da chave do AI Studio no `.env` que rode um script Python bem simples que manda o PDF para o "gemini-3.5-flash-lite" transformar em Markdown.
+
 ### Perguntas de Alinhamento Arquitetural
 
 - Qual abordagem arquitetural você prefere para o agente e o acesso aos dados/políticas?
