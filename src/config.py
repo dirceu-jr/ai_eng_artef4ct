@@ -18,6 +18,7 @@ MEMORY_DB_PATH = Path(os.getenv("MEMORY_DB_PATH", str(PROJECT_ROOT / "chat_memor
 GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "").strip()
 GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.8-flash").strip()
 AVAILABLE_GEMINI_MODELS: tuple[str, ...] = ("gemini-3.8-flash", "gemini-3.5-flash-lite")
+MAX_TOOL_ITERATIONS: int = int(os.getenv("MAX_TOOL_ITERATIONS", "10").strip() or "10")
 
 # Data de referência para avaliar prazos de 7 dias (arrependimento) e 30 dias (defeito)
 # Os pedidos em orders.csv vão de 2025-10-15 até 2026-03-22.

@@ -9,7 +9,7 @@ from typing import Any, Callable
 from google import genai
 from google.genai import types
 
-from src.config import GEMINI_API_KEY, GEMINI_MODEL, MEMORY_DB_PATH
+from src.config import GEMINI_API_KEY, GEMINI_MODEL, MAX_TOOL_ITERATIONS, MEMORY_DB_PATH
 from src.database import init_database
 from src.memory import ConversationMemory
 from src.prompts import build_system_prompt
@@ -151,7 +151,7 @@ class EmporioMusicaAgent:
         self,
         user_message: str,
         session_id: str = "default",
-        max_tool_iterations: int = 5,
+        max_tool_iterations: int = MAX_TOOL_ITERATIONS,
     ) -> AgentTurnResponse:
         """Processa uma mensagem do cliente, executa ferramentas se necessário e salva no histórico."""
         contents = self._build_contents_from_history(session_id=session_id, new_user_message=user_message)
