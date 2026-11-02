@@ -23,14 +23,14 @@ O agente combina **Function Calling determinístico sobre SQLite**, **injeção 
 ### Pré-requisitos
 - **Python 3.11+** (testado em Python 3.14)
 - Chave de API do **Google AI Studio** (`GEMINI_API_KEY`)
-- Arquivos de dados na pasta `data/`:
+- Pasta `data/` original fornecida no desafio copiada na raiz do projeto (não versionada no Git por boas práticas):
   - `data/desafio_tecnico_ai_eng - categories.csv`
   - `data/desafio_tecnico_ai_eng - customers.csv`
   - `data/desafio_tecnico_ai_eng - order_items.csv`
   - `data/desafio_tecnico_ai_eng - orders.csv`
   - `data/desafio_tecnico_ai_eng - products.csv`
   - `data/desafio_tecnico_ai_eng - promotions.csv`
-  - `data/politicas_da_loja.md`
+  - `data/politicas_da_loja.pdf` (será convertido em `data/politicas_da_loja.md` no Passo 3)
 
 ### Passo 1: Criar ambiente virtual e instalar dependências
 
@@ -59,7 +59,17 @@ MELHOR_ENVIO_TOKEN=
 MELHOR_ENVIO_SANDBOX=false
 ```
 
-### Passo 3: Executar a Interface Web (Streamlit) ou a CLI Interativa (Rich)
+### Passo 3: Converter o PDF de Políticas para Markdown via `gemini-3.5-flash-lite`
+
+Com a pasta `data/` original na raiz e a `GEMINI_API_KEY` configurada no `.env`, execute o script abaixo para converter `data/politicas_da_loja.pdf` em `data/politicas_da_loja.md` utilizando a leitura multimodal nativa de PDF do modelo `gemini-3.5-flash-lite`:
+
+```bash
+python convert_pdf.py
+```
+
+*(Nota: Caso você pule este comando, o próprio agente detectará a ausência do `.md` e fará a conversão automática do `.pdf` na primeira inicialização).*
+
+### Passo 4: Executar a Interface Web (Streamlit) ou a CLI Interativa (Rich)
 
 #### Opção A — Interface Web (Streamlit com Inspetor de Tool Calls)
 ```bash
@@ -75,7 +85,7 @@ python cli.py
 python cli.py --session teste_rapido -m "Quais opções de violões disponíveis custando até R$1000?" --export conversa.md
 ```
 
-### Passo 4: Executar a Suíte de Testes Automatizados (`pytest`)
+### Passo 5: Executar a Suíte de Testes Automatizados (`pytest`)
 
 ```bash
 python -m pytest -v

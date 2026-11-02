@@ -20,10 +20,22 @@ Frete: Campo Grande por motoboy próprio (1 a 3 dias úteis, grátis acima de R$
 
 
 def load_store_policies(data_dir: Path = DATA_DIR) -> str:
-    """Carrega o conteúdo integral de `data/politicas_da_loja.md` (ou fallback se ausente)."""
+    """Carrega `data/politicas_da_loja.md` (convertendo automaticamente do `.pdf` se necessário)."""
     md_path = data_dir / "politicas_da_loja.md"
     if md_path.exists():
         return md_path.read_text(encoding="utf-8").strip()
+
+    pdf_path = data_dir / "politicas_da_loja.pdf"
+    if pdf_path.exists():
+        try:
+            from convert_pdf import convert_pdf_to_markdown
+
+            convert_pdf_to_markdown(pdf_path=pdf_path, md_path=md_path)
+            if md_path.exists():
+                return md_path.read_text(encoding="utf-8").strip()
+        except Exception:
+            pass
+
     return DEFAULT_POLICIES_FALLBACK
 
 
