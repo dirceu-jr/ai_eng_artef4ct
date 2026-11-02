@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 import streamlit as st
 
 from src.agent import EmporioMusicaAgent
@@ -34,6 +35,18 @@ def _format_usage_caption(usage: dict) -> str:
         f"💰 **Custo est.**: US\\$ {cost_usd:.5f} (R\\$ {cost_brl:.4f}) | "
         f"🤖 `{model}` ({calls} {'chamada' if calls == 1 else 'chamadas'})"
     )
+
+
+def _render_session_usage_metrics(placeholder: Any, messages: list[dict]) -> None:
+    """Renderiza (ou atualiza dinamicamente) os cards de consumo acumulado na sidebar."""
+    session_tokens = sum(int((m.get("usage") or {}).get("total_tokens", 0)) for m in messages)
+    session_usd = sum(float((m.get("usage") or {}).get("estimated_cost_usd", 0.0)) for m in messages)
+    session_brl = sum(float((m.get("usage") or {}).get("estimated_cost_brl", 0.0)) for m in messages)
+    with placeholder.container():
+        mcol1, mcol2 = st.columns(2)
+        mcol1.metric("Total Tokens", f"{session_tokens:,}")
+        mcol2.metric("Custo (BRL)", f"R$ {session_brl:.4f}", delta=f"US$ {session_usd:.5f}", delta_color="off")
+
 
 st.set_page_config(
     page_title="Empório da Música — Assistente Virtual",
@@ -95,15 +108,11 @@ def main() -> None:
                 use_container_width=True,
             )
 
-        # Resumo acumulado de tokens e custo da sessão
-        session_tokens = sum(int((m.get("usage") or {}).get("total_tokens", 0)) for m in messages)
-        session_usd = sum(float((m.get("usage") or {}).get("estimated_cost_usd", 0.0)) for m in messages)
-        session_brl = sum(float((m.get("usage") or {}).get("estimated_cost_brl", 0.0)) for m in messages)
+        # Resumo acumulado de tokens e custo da sessão (usando st.empty para atualizar em tempo real)
         st.divider()
         st.subheader("💰 Consumo da Sessão")
-        mcol1, mcol2 = st.columns(2)
-        mcol1.metric("Total Tokens", f"{session_tokens:,}")
-        mcol2.metric("Custo (BRL)", f"R$ {session_brl:.4f}", delta=f"US$ {session_usd:.5f}", delta_color="off")
+        usage_placeholder = st.empty()
+        _render_session_usage_metrics(usage_placeholder, messages)
 
         st.divider()
         st.subheader("⚡ Cenários Rápidos")
@@ -167,6 +176,9 @@ def main() -> None:
                         caption_str = _format_usage_caption(turn.usage)
                         if caption_str:
                             st.caption(caption_str)
+                    # Atualiza imediatamente os cards de consumo na sidebar com a nova mensagem salva
+                    updated_messages = memory.get_messages(session_id)
+                    _render_session_usage_metrics(usage_placeholder, updated_messages)
                 except Exception as exc:
                     st.error(f"Erro ao processar mensagem: {exc}")
 
