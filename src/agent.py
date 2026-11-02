@@ -9,7 +9,13 @@ from typing import Any, Callable
 from google import genai
 from google.genai import types
 
-from src.config import GEMINI_API_KEY, GEMINI_MODEL, MAX_TOOL_ITERATIONS, MEMORY_DB_PATH
+from src.config import (
+    GEMINI_API_KEY,
+    GEMINI_MODEL,
+    MAX_TOOL_ITERATIONS,
+    MEMORY_DB_PATH,
+    estimate_usage_cost,
+)
 from src.database import init_database
 from src.memory import ConversationMemory
 from src.prompts import build_system_prompt
@@ -99,6 +105,7 @@ class AgentTurnResponse:
     session_id: str
     model_used: str
     tool_calls: list[dict[str, Any]] = field(default_factory=list)
+    usage: dict[str, Any] = field(default_factory=dict)
 
 
 class EmporioMusicaAgent:
@@ -166,12 +173,25 @@ class EmporioMusicaAgent:
         model_used = self.model_name
         final_text = ""
 
+        prompt_tokens_sum = 0
+        output_tokens_sum = 0
+        thoughts_tokens_sum = 0
+        cached_tokens_sum = 0
+        llm_calls_count = 0
+
         for _ in range(max_tool_iterations):
             response = self.client.models.generate_content(
                 model=self.model_name,
                 contents=contents,
                 config=config,
             )
+            llm_calls_count += 1
+            um = getattr(response, "usage_metadata", None)
+            if um is not None:
+                prompt_tokens_sum += int(getattr(um, "prompt_token_count", 0) or 0)
+                output_tokens_sum += int(getattr(um, "candidates_token_count", 0) or 0)
+                thoughts_tokens_sum += int(getattr(um, "thoughts_token_count", 0) or 0)
+                cached_tokens_sum += int(getattr(um, "cached_content_token_count", 0) or 0)
 
             function_calls = getattr(response, "function_calls", None)
             if not function_calls:
@@ -220,12 +240,22 @@ class EmporioMusicaAgent:
                 "Pode reformular ou especificar melhor sua dúvida?"
             )
 
+        usage_summary = estimate_usage_cost(
+            model=model_used,
+            prompt_tokens=prompt_tokens_sum,
+            output_tokens=output_tokens_sum,
+            thoughts_tokens=thoughts_tokens_sum,
+            cached_tokens=cached_tokens_sum,
+            llm_calls=llm_calls_count,
+        )
+
         self.memory.add_message(session_id=session_id, role="user", content=user_message)
         self.memory.add_message(
             session_id=session_id,
             role="assistant",
             content=final_text,
             tool_calls=executed_tool_calls,
+            usage=usage_summary,
         )
 
         return AgentTurnResponse(
@@ -233,5 +263,6 @@ class EmporioMusicaAgent:
             session_id=session_id,
             model_used=model_used,
             tool_calls=executed_tool_calls,
+            usage=usage_summary,
         )
 

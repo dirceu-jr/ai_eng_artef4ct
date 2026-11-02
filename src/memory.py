@@ -41,11 +41,16 @@ class ConversationMemory:
                 role TEXT NOT NULL,
                 content TEXT NOT NULL,
                 tool_calls_json TEXT,
+                usage_json TEXT,
                 created_at TEXT NOT NULL,
                 FOREIGN KEY (session_id) REFERENCES sessions(session_id)
             );
             """
         )
+        # Migração suave caso o arquivo chat_memory.db tenha sido criado antes da coluna usage_json
+        cols = {row["name"] for row in conn.execute("PRAGMA table_info(messages)").fetchall()}
+        if "usage_json" not in cols:
+            conn.execute("ALTER TABLE messages ADD COLUMN usage_json TEXT")
         conn.commit()
         conn.close()
 
@@ -67,15 +72,17 @@ class ConversationMemory:
         role: str,
         content: str,
         tool_calls: list[dict[str, Any]] | None = None,
+        usage: dict[str, Any] | None = None,
         title: str | None = None,
     ) -> None:
         self.ensure_session(session_id, title=title or f"Sessão {session_id}")
         now = datetime.now(timezone.utc).isoformat()
         tc_json = json.dumps(tool_calls, ensure_ascii=False) if tool_calls else None
+        usage_str = json.dumps(usage, ensure_ascii=False) if usage else None
         conn = self._connect()
         conn.execute(
-            "INSERT INTO messages (session_id, role, content, tool_calls_json, created_at) VALUES (?, ?, ?, ?, ?)",
-            (session_id, role, content, tc_json, now),
+            "INSERT INTO messages (session_id, role, content, tool_calls_json, usage_json, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+            (session_id, role, content, tc_json, usage_str, now),
         )
         conn.execute("UPDATE sessions SET updated_at = ? WHERE session_id = ?", (now, session_id))
         conn.commit()
@@ -84,19 +91,21 @@ class ConversationMemory:
     def get_messages(self, session_id: str) -> list[dict[str, Any]]:
         conn = self._connect()
         rows = conn.execute(
-            "SELECT id, role, content, tool_calls_json, created_at FROM messages WHERE session_id = ? ORDER BY id ASC",
+            "SELECT id, role, content, tool_calls_json, usage_json, created_at FROM messages WHERE session_id = ? ORDER BY id ASC",
             (session_id,),
         ).fetchall()
         conn.close()
         result: list[dict[str, Any]] = []
         for r in rows:
             tcs = json.loads(r["tool_calls_json"]) if r["tool_calls_json"] else []
+            usage = json.loads(r["usage_json"]) if r["usage_json"] else {}
             result.append(
                 {
                     "id": r["id"],
                     "role": r["role"],
                     "content": r["content"],
                     "tool_calls": tcs,
+                    "usage": usage,
                     "created_at": r["created_at"],
                 }
             )

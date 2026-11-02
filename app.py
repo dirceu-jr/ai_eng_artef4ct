@@ -16,6 +16,25 @@ def escape_streamlit_markdown(text: str) -> str:
         return ""
     return re.sub(r"(?<!\\)\$", r"\$", text)
 
+
+def _format_usage_caption(usage: dict) -> str:
+    if not usage or not usage.get("total_tokens"):
+        return ""
+    total = int(usage.get("total_tokens", 0))
+    prompt = int(usage.get("prompt_tokens", 0))
+    out = int(usage.get("output_tokens", 0))
+    thoughts = int(usage.get("thoughts_tokens", 0))
+    calls = int(usage.get("llm_calls", 1))
+    cost_usd = float(usage.get("estimated_cost_usd", 0.0))
+    cost_brl = float(usage.get("estimated_cost_brl", 0.0))
+    model = usage.get("model", "")
+    thoughts_part = f" + {thoughts:,} thoughts" if thoughts > 0 else ""
+    return (
+        f"📊 **Tokens**: {total:,} ({prompt:,} in / {out:,} out{thoughts_part}) | "
+        f"💰 **Custo est.**: US\\$ {cost_usd:.5f} (R\\$ {cost_brl:.4f}) | "
+        f"🤖 `{model}` ({calls} {'chamada' if calls == 1 else 'chamadas'})"
+    )
+
 st.set_page_config(
     page_title="Empório da Música — Assistente Virtual",
     page_icon="🎸",
@@ -36,6 +55,8 @@ def main() -> None:
     if "session_id" not in st.session_state:
         st.session_state.session_id = "streamlit_default"
 
+    messages = memory.get_messages(st.session_state.session_id)
+
     with st.sidebar:
         st.title("🎸 Empório da Música")
         st.caption("*Sua música começa aqui.* — Campo Grande/MS")
@@ -55,7 +76,9 @@ def main() -> None:
             index=default_idx,
         )
         session_id = st.text_input("🗂️ ID da Sessão", value=st.session_state.session_id)
-        st.session_state.session_id = session_id
+        if session_id != st.session_state.session_id:
+            st.session_state.session_id = session_id
+            messages = memory.get_messages(session_id)
 
         col1, col2 = st.columns(2)
         with col1:
@@ -72,6 +95,16 @@ def main() -> None:
                 use_container_width=True,
             )
 
+        # Resumo acumulado de tokens e custo da sessão
+        session_tokens = sum(int((m.get("usage") or {}).get("total_tokens", 0)) for m in messages)
+        session_usd = sum(float((m.get("usage") or {}).get("estimated_cost_usd", 0.0)) for m in messages)
+        session_brl = sum(float((m.get("usage") or {}).get("estimated_cost_brl", 0.0)) for m in messages)
+        st.divider()
+        st.subheader("💰 Consumo da Sessão")
+        mcol1, mcol2 = st.columns(2)
+        mcol1.metric("Total Tokens", f"{session_tokens:,}")
+        mcol2.metric("Custo (BRL)", f"R$ {session_brl:.4f}", delta=f"US$ {session_usd:.5f}", delta_color="off")
+
         st.divider()
         st.subheader("⚡ Cenários Rápidos")
         selected_quick_prompt: str | None = None
@@ -85,7 +118,6 @@ def main() -> None:
         "**simulação de PIX/parcelamento e frete** ou consulte o **status e trocas do seu pedido**."
     )
 
-    messages = memory.get_messages(session_id)
     if not messages:
         with st.chat_message("assistant", avatar="🎸"):
             st.markdown(
@@ -104,6 +136,10 @@ def main() -> None:
                         st.markdown(f"**`{tc['name']}`** ({tc.get('duration_ms', 0)} ms)")
                         st.json({"args": tc.get("args"), "result": tc.get("result")})
             st.markdown(escape_streamlit_markdown(msg["content"]))
+            if msg["role"] == "assistant" and msg.get("usage"):
+                caption_str = _format_usage_caption(msg["usage"])
+                if caption_str:
+                    st.caption(caption_str)
 
     user_prompt = st.chat_input("Digite sua mensagem sobre instrumentos, preços, políticas ou pedidos...")
     active_prompt = selected_quick_prompt or user_prompt
@@ -127,6 +163,10 @@ def main() -> None:
                                 st.markdown(f"**`{tc['name']}`** ({tc.get('duration_ms', 0)} ms)")
                                 st.json({"args": tc.get("args"), "result": tc.get("result")})
                     st.markdown(escape_streamlit_markdown(turn.text))
+                    if turn.usage:
+                        caption_str = _format_usage_caption(turn.usage)
+                        if caption_str:
+                            st.caption(caption_str)
                 except Exception as exc:
                     st.error(f"Erro ao processar mensagem: {exc}")
 

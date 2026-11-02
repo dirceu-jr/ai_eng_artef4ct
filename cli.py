@@ -54,7 +54,7 @@ def _print_help() -> None:
     console.print(table)
 
 
-def _render_turn(turn_text: str, tool_calls: list[dict]) -> None:
+def _render_turn(turn_text: str, tool_calls: list[dict], usage: dict | None = None) -> None:
     if tool_calls:
         tc_lines = []
         for tc in tool_calls:
@@ -67,10 +67,17 @@ def _render_turn(turn_text: str, tool_calls: list[dict]) -> None:
                 border_style="dim yellow",
             )
         )
+    subtitle = None
+    if usage and usage.get("total_tokens"):
+        subtitle = (
+            f"📊 {usage['total_tokens']:,} tokens ({usage['prompt_tokens']:,} in / {usage['output_tokens']:,} out) | "
+            f"💰 US$ {usage['estimated_cost_usd']:.5f} (R$ {usage['estimated_cost_brl']:.4f})"
+        )
     console.print(
         Panel(
             Markdown(turn_text),
             title="🎸 Assistente Empório da Música",
+            subtitle=subtitle,
             border_style="green",
         )
     )
@@ -89,7 +96,7 @@ def main() -> None:
     if args.message:
         try:
             turn = agent.chat(args.message, session_id=args.session)
-            _render_turn(turn.text, turn.tool_calls)
+            _render_turn(turn.text, turn.tool_calls, turn.usage)
             if args.export:
                 Path(args.export).write_text(
                     agent.memory.export_session_markdown(args.session),
@@ -134,7 +141,7 @@ def main() -> None:
         try:
             with console.status("[bold green]Consultando sistema da Empório da Música...[/bold green]"):
                 turn = agent.chat(user_input, session_id=args.session)
-            _render_turn(turn.text, turn.tool_calls)
+            _render_turn(turn.text, turn.tool_calls, turn.usage)
         except Exception as exc:
             console.print(Panel(str(exc), title="Erro na execução", border_style="red"))
 

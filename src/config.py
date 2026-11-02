@@ -20,6 +20,14 @@ GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.8-flash").strip()
 AVAILABLE_GEMINI_MODELS: tuple[str, ...] = ("gemini-3.8-flash", "gemini-3.5-flash-lite")
 MAX_TOOL_ITERATIONS: int = int(os.getenv("MAX_TOOL_ITERATIONS", "10").strip() or "10")
 
+# Tabela de preços de referência por 1 milhão (1M) de tokens em USD
+MODEL_PRICING_USD_PER_1M: dict[str, dict[str, float]] = {
+    "gemini-3.8-flash": {"input": 0.15, "output": 0.60, "cached_input": 0.0375},
+    "gemini-3.5-flash-lite": {"input": 0.075, "output": 0.30, "cached_input": 0.01875},
+}
+DEFAULT_PRICING_USD_PER_1M: dict[str, float] = {"input": 0.15, "output": 0.60, "cached_input": 0.0375}
+USD_TO_BRL_RATE: float = float(os.getenv("USD_TO_BRL_RATE", "5.80").strip() or "5.80")
+
 # Data de referência para avaliar prazos de 7 dias (arrependimento) e 30 dias (defeito)
 # Os pedidos em orders.csv vão de 2025-10-15 até 2026-03-22.
 REFERENCE_DATE_STR: str = os.getenv("REFERENCE_DATE", "2026-03-25").strip()
@@ -42,4 +50,39 @@ def get_reference_date() -> date:
         return date.fromisoformat(REFERENCE_DATE_STR)
     except ValueError:
         return date(2026, 3, 25)
+
+
+def estimate_usage_cost(
+    model: str,
+    prompt_tokens: int,
+    output_tokens: int,
+    thoughts_tokens: int = 0,
+    cached_tokens: int = 0,
+    llm_calls: int = 1,
+) -> dict[str, float | int | str]:
+    """Calcula o custo estimado em USD e BRL a partir dos contadores do `usage_metadata` do Gemini."""
+    rates = MODEL_PRICING_USD_PER_1M.get(model, DEFAULT_PRICING_USD_PER_1M)
+    non_cached_input = max(prompt_tokens - cached_tokens, 0)
+    billable_output = output_tokens + thoughts_tokens
+
+    cost_usd = (
+        (non_cached_input / 1_000_000) * rates["input"]
+        + (cached_tokens / 1_000_000) * rates["cached_input"]
+        + (billable_output / 1_000_000) * rates["output"]
+    )
+    cost_brl = cost_usd * USD_TO_BRL_RATE
+    total_tokens = prompt_tokens + output_tokens + thoughts_tokens
+
+    return {
+        "model": model,
+        "llm_calls": llm_calls,
+        "prompt_tokens": prompt_tokens,
+        "output_tokens": output_tokens,
+        "thoughts_tokens": thoughts_tokens,
+        "cached_tokens": cached_tokens,
+        "total_tokens": total_tokens,
+        "estimated_cost_usd": round(cost_usd, 6),
+        "estimated_cost_brl": round(cost_brl, 6),
+    }
+
 

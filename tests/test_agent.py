@@ -15,17 +15,26 @@ class FakeModelsAPI:
 
     def generate_content(self, model: str, contents: list, config: object) -> object:
         self.calls += 1
+        fake_usage = SimpleNamespace(
+            prompt_token_count=1200,
+            candidates_token_count=150,
+            thoughts_token_count=50,
+            cached_content_token_count=0,
+            total_token_count=1400,
+        )
         if self.calls == 1:
             fc = SimpleNamespace(name="tool_obter_detalhes_produto", args={"produto_id_ou_nome": "Takamine GD20"})
             return SimpleNamespace(
                 function_calls=[fc],
                 candidates=[SimpleNamespace(content=contents[-1])],
                 text=None,
+                usage_metadata=fake_usage,
             )
         return SimpleNamespace(
             function_calls=[],
             candidates=[],
             text="O Takamine GD20 custa R$ 2.199,00 na tabela (ou R$ 2.089,05 no PIX com 5% de desconto) e temos 5 unidades em estoque!",
+            usage_metadata=fake_usage,
         )
 
 
@@ -47,6 +56,13 @@ def test_agent_tool_calling_loop_and_memory_persistence(tmp_path: Path) -> None:
     assert len(turn.tool_calls) == 1
     assert turn.tool_calls[0]["name"] == "tool_obter_detalhes_produto"
     assert turn.tool_calls[0]["result"]["product"]["product_id"] == 95
+    assert turn.usage["llm_calls"] == 2
+    assert turn.usage["prompt_tokens"] == 2400
+    assert turn.usage["output_tokens"] == 300
+    assert turn.usage["thoughts_tokens"] == 100
+    assert turn.usage["total_tokens"] == 2800
+    assert turn.usage["estimated_cost_usd"] > 0
+    assert turn.usage["estimated_cost_brl"] > 0
 
     # Verifica persistência no banco e exportação Markdown
     history = memory.get_messages("sessao_teste")
