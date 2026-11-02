@@ -195,7 +195,7 @@ Este projeto foi desenvolvido em *pair programming* com o **Antigravity IDE 2.6.
 2. **Alinhamento de Decisões Arquiteturais**: Elaboração de um plano de ação (`implementation_plan.md`) com múltiplas alternativas técnicas e avaliação específica da API do Melhor Envio.
 3. **Desenvolvimento Incremental Orientado a Testes (`pytest`)**: Implementação modular em etapas (ingestão SQLite $\rightarrow$ módulo de frete $\rightarrow$ tools de negócio $\rightarrow$ agente Gemini $\rightarrow$ interfaces CLI/Streamlit $\rightarrow$ exemplos e documentação), validando cada camada com testes automatizados.
 
-### Prompts Utilizados
+### Histórico de Prompts Utilizados
 
 1 - Estou participando de um processo seletivo e preciso fazer um desafio técnico. Leia o arquivo `desafio_tecnico_ai_eng_artef4ct.md` e siga as instruções. Antes de escrever código, monte um plano de ação com algumas opções de decisões técnicas.
 
@@ -214,6 +214,10 @@ Para o cálculo do frete, faça a avaliação de utilizar a API do "Melhor Envio
 7 - Onde está a variável de limite de etapas internas?
 
 8 - Sim, vamos expor a variável de limite de etapas internas no `src/config.py` e no `.env.example`.
+
+9 - A API do Gemini retorna o custo da requisição? Quer que eu adicione isso? Sim.
+
+10 - Legal. No Streamlit a contagem de tokens e o custo estão sendo exibidos logo abaixo das respostas mas a área "Consumo da Sessão" na sidebar não está sendo atualizada. Está sendo atualizada somente quando recarrega a página.
 
 ### Perguntas de Alinhamento Arquitetural
 
