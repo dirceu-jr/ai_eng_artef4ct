@@ -6,7 +6,7 @@ import re
 import streamlit as st
 
 from src.agent import EmporioMusicaAgent
-from src.config import GEMINI_API_KEY, GEMINI_MODEL
+from src.config import AVAILABLE_GEMINI_MODELS, GEMINI_API_KEY, GEMINI_MODEL
 from src.memory import ConversationMemory
 
 
@@ -47,10 +47,12 @@ def main() -> None:
             type="password",
             help="Carregada automaticamente do arquivo .env se presente.",
         )
+        model_options = list(AVAILABLE_GEMINI_MODELS)
+        default_idx = model_options.index(GEMINI_MODEL) if GEMINI_MODEL in model_options else 0
         model_choice = st.selectbox(
             "🤖 Modelo Gemini",
-            options=[GEMINI_MODEL, "gemini-2.5-flash", "gemini-2.5-pro"],
-            index=0,
+            options=model_options,
+            index=default_idx,
         )
         session_id = st.text_input("🗂️ ID da Sessão", value=st.session_state.session_id)
         st.session_state.session_id = session_id

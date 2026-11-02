@@ -17,8 +17,7 @@ MEMORY_DB_PATH = Path(os.getenv("MEMORY_DB_PATH", str(PROJECT_ROOT / "chat_memor
 
 GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "").strip()
 GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.8-flash").strip()
-# Fallback de modelo caso a conta/endpoint do Google AI Studio ainda mapeie para a série 2.5
-GEMINI_FALLBACK_MODEL: str = os.getenv("GEMINI_FALLBACK_MODEL", "gemini-2.5-flash").strip()
+AVAILABLE_GEMINI_MODELS: tuple[str, ...] = ("gemini-3.8-flash", "gemini-3.5-flash-lite")
 
 # Data de referência para avaliar prazos de 7 dias (arrependimento) e 30 dias (defeito)
 # Os pedidos em orders.csv vão de 2025-10-15 até 2026-03-22.

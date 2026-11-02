@@ -7,10 +7,9 @@ import time
 from typing import Any, Callable
 
 from google import genai
-from google.genai import errors as genai_errors
 from google.genai import types
 
-from src.config import GEMINI_API_KEY, GEMINI_FALLBACK_MODEL, GEMINI_MODEL, MEMORY_DB_PATH
+from src.config import GEMINI_API_KEY, GEMINI_MODEL, MEMORY_DB_PATH
 from src.database import init_database
 from src.memory import ConversationMemory
 from src.prompts import build_system_prompt
@@ -115,7 +114,6 @@ class EmporioMusicaAgent:
         init_database()
         self.api_key = (api_key if api_key is not None else GEMINI_API_KEY).strip()
         self.model_name = (model or GEMINI_MODEL).strip()
-        self.fallback_model_name = GEMINI_FALLBACK_MODEL
         self.memory = memory or ConversationMemory(db_path=MEMORY_DB_PATH)
         self.system_prompt = build_system_prompt()
         self._client = client
@@ -149,34 +147,6 @@ class EmporioMusicaAgent:
         )
         return contents
 
-    def _generate_with_model_fallback(
-        self,
-        contents: list[types.Content],
-        config: types.GenerateContentConfig,
-    ) -> tuple[Any, str]:
-        """Invoca `generate_content` com o modelo configurado e faz fallback transparente se o alias não existir na conta."""
-        try:
-            resp = self.client.models.generate_content(
-                model=self.model_name,
-                contents=contents,
-                config=config,
-            )
-            return resp, self.model_name
-        except genai_errors.APIError as exc:
-            err_msg = str(exc).lower()
-            if (
-                self.fallback_model_name
-                and self.fallback_model_name != self.model_name
-                and ("not found" in err_msg or "404" in err_msg or "not supported" in err_msg)
-            ):
-                resp = self.client.models.generate_content(
-                    model=self.fallback_model_name,
-                    contents=contents,
-                    config=config,
-                )
-                return resp, self.fallback_model_name
-            raise
-
     def chat(
         self,
         user_message: str,
@@ -197,7 +167,11 @@ class EmporioMusicaAgent:
         final_text = ""
 
         for _ in range(max_tool_iterations):
-            response, model_used = self._generate_with_model_fallback(contents=contents, config=config)
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=contents,
+                config=config,
+            )
 
             function_calls = getattr(response, "function_calls", None)
             if not function_calls:

@@ -1,12 +1,12 @@
-# 🎸 Empório da Música — Agente Inteligente de Atendimento (Desafio Técnico AI Engineer — Artef4ct)
+# Empório da Música — Agente de Atendimento
 
-Agente conversacional em Python desenvolvido para auxiliar a equipe de atendimento da **Empório da Música** (*"Sua música começa aqui."*), loja de instrumentos musicais localizada em Campo Grande/MS.
+Agente conversacional em Python desenvolvido para auxiliar a equipe de atendimento.
 
 O agente combina **Function Calling determinístico sobre SQLite**, **injeção integral das políticas da loja no System Prompt**, **integração com a API v2 do Melhor Envio (com fallback local)** e **interfaces em CLI (`Rich`) e Web (`Streamlit`)**.
 
 ---
 
-## 📋 Sumário
+## Sumário
 
 1. [Como Executar o Projeto](#-1-como-executar-o-projeto)
 2. [Arquitetura e Justificativa das Decisões Técnicas](#-2-arquitetura-e-justificativa-das-decisões-técnicas)
@@ -18,7 +18,7 @@ O agente combina **Function Calling determinístico sobre SQLite**, **injeção 
 
 ---
 
-## 🚀 1. Como Executar o Projeto
+## 1. Como Executar o Projeto
 
 ### Pré-requisitos
 - **Python 3.11+** (testado em Python 3.14)
@@ -54,9 +54,9 @@ GEMINI_API_KEY=sua_chave_do_google_ai_studio
 GEMINI_MODEL=gemini-3.8-flash
 REFERENCE_DATE=2026-03-25
 
-# Opcional: Token OAuth2 do Melhor Envio (se vazio, usa o simulador determinístico de contingência)
+# Opcional: Token do Melhor Envio (se vazio, usa o simulador determinístico de contingência)
 MELHOR_ENVIO_TOKEN=
-MELHOR_ENVIO_SANDBOX=true
+MELHOR_ENVIO_SANDBOX=false
 ```
 
 ### Passo 3: Executar a Interface Web (Streamlit) ou a CLI Interativa (Rich)
@@ -114,8 +114,8 @@ flowchart TD
 - Optamos por construir o loop de *function calling* diretamente sobre o SDK oficial `google-genai` com contratos de entrada/saída tipados em `Pydantic` (`src/schemas.py`), sem depender de abstrações pesadas como LangChain.
 - Isso torna o controle de estado, o rastreamento de latência de cada ferramenta (`duration_ms`) e a inspeção de chamadas totalmente transparentes e fáceis de testar unitariamente (`tests/`).
 
-### 2.3 Modelo e Provedor: Google Gemini (`gemini-3.8-flash`)
-- Configurado por padrão para utilizar `gemini-3.8-flash` (parametrizável via `GEMINI_MODEL` no `.env`), contando também com *fallback* automático transparente para `gemini-2.5-flash` caso a chave do avaliador esteja vinculada a um endpoint que ainda não exponha o alias `3.8`.
+### 2.3 Modelo e Provedor: Google Gemini (`gemini-3.8-flash` / `gemini-3.5-flash-lite`)
+- Configurado por padrão para utilizar `gemini-3.8-flash` (parametrizável via `GEMINI_MODEL` no `.env`), disponibilizando na interface web as opções `gemini-3.8-flash` e `gemini-3.5-flash-lite`.
 
 ### 2.4 Persistência de Histórico e Interfaces
 - O histórico de conversas é persistido localmente em SQLite (`chat_memory.db` via `src/memory.py`), registrando tanto as mensagens quanto os metadados das *tool calls* acionadas em cada turno, permitindo retomar sessões e exportá-las diretamente para Markdown.
@@ -204,6 +204,8 @@ No "Modelo / Provedor" podemos utilizar o Google Gemini mais atualizado: "gemini
 Para o cálculo do frete, faça a avaliação de utilizar a API do "Melhor Envio".
 
 3 - Legal, funcionou. Mas na interface web do Streamlit, quando o agente responde algo com preço em Reais Brasileiro (R$) está ficando quebrada a formatação.
+
+4 - Vamos remover o fallback model (gemini-2.5-flash). Na lista de modelos disponíveis vamos deixar somente: "gemini-3.8-flash" e "gemini-3.5-flash-lite".
 
 ### Perguntas de Alinhamento Arquitetural
 
