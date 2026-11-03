@@ -228,6 +228,8 @@ Para o cálculo do frete, faça a avaliação de utilizar a API do "Melhor Envio
 
 13 - O método `estimate_usage_cost()` parece estar fora de contexto do arquivo `config.py`. Teria outro arquivo melhor para ele estar na pasta `/src` ou teria que criar um arquivo novo?
 
+14 - Vamos adicionar no `README.md` algo sobre a variável `USD_TO_BRL_RATE`.
+
 ### Perguntas de Alinhamento Arquitetural
 
 No início o Gemini 4 Argon me perguntou:
