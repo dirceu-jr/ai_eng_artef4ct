@@ -1,38 +1,40 @@
-# Agente de Atendimento - Empório da Música
+# Customer Support Agent - Empório da Música
 
-Agente conversacional em Python desenvolvido para auxiliar a equipe de atendimento.
+_Read this in other languages: [Português](README.pt-BR.md)._
 
-O agente combina **Function Calling determinístico sobre SQLite**, **injeção integral das políticas da loja no System Prompt**, **integração com a API v2 do Melhor Envio (com fallback local)** e **interfaces em CLI (`Rich`) e Web (`Streamlit`)**.
+Conversational Python agent built to assist the customer support team.
 
----
-
-## Sumário
-
-1. [Como Executar o Projeto](#1-como-executar-o-projeto)
-2. [Arquitetura e Justificativa das Decisões Técnicas](#2-arquitetura-e-justificativa-das-decisões-técnicas)
-3. [Tratamento de Dados, Casos de Borda e Premissas Assumidas](#3-tratamento-de-dados-casos-de-borda-e-premissas-assumidas)
-4. [Avaliação Técnica: API do Melhor Envio para Frete](#4-avaliação-técnica-api-do-melhor-envio-para-frete)
-5. [Exemplos de Interação com o Agente](#5-exemplos-de-interação-com-o-agente)
-6. [Limitações Conhecidas e Próximos Passos](#6-limitações-conhecidas-e-o-que-faria-com-mais-tempo)
-7. [Uso de Assistentes de Código e Registro do Workflow](#7-uso-de-assistentes-de-código-e-registro-do-workflow)
+The agent combines **deterministic Function Calling over SQLite**, **full store policy injection in the System Prompt**, **integration with the Melhor Envio v2 API (with local fallback)**, and **both CLI (`Rich`) and Web (`Streamlit`) interfaces**.
 
 ---
 
-## 1. Como Executar o Projeto
+## Table of Contents
 
-### Pré-requisitos
-- **Python 3.11+** (testado em Python 3.14)
-- Chave de API do **Google AI Studio** (`GEMINI_API_KEY`)
-- Pasta `data/` original fornecida no desafio copiada na raiz do projeto (não versionada no Git por boas práticas):
+1. [How to Run the Project](#1-how-to-run-the-project)
+2. [Architecture and Rationale for Technical Decisions](#2-architecture-and-rationale-for-technical-decisions)
+3. [Data Handling, Edge Cases, and Assumptions](#3-data-handling-edge-cases-and-assumptions)
+4. [Technical Evaluation: Melhor Envio API for Shipping](#4-technical-evaluation-melhor-envio-api-for-shipping)
+5. [Agent Interaction Examples](#5-agent-interaction-examples)
+6. [Known Limitations and Next Steps](#6-known-limitations-and-what-i-would-do-with-more-time)
+7. [Coding Assistant Usage and Workflow Log](#7-coding-assistant-usage-and-workflow-log)
+
+---
+
+## 1. How to Run the Project
+
+### Prerequisites
+- **Python 3.11+** (tested on Python 3.14)
+- **Google AI Studio** API Key (`GEMINI_API_KEY`)
+- Original `data/` folder provided in the challenge copied to the project root (excluded from Git version control following best practices):
   - `data/desafio_tecnico_ai_eng - categories.csv`
   - `data/desafio_tecnico_ai_eng - customers.csv`
   - `data/desafio_tecnico_ai_eng - order_items.csv`
   - `data/desafio_tecnico_ai_eng - orders.csv`
   - `data/desafio_tecnico_ai_eng - products.csv`
   - `data/desafio_tecnico_ai_eng - promotions.csv`
-  - `data/políticas_da_loja.pdf` (será automaticamente renomeado para `data/politicas_da_loja.pdf` sem acento e convertido em `data/politicas_da_loja.md` no Passo 3)
+  - `data/políticas_da_loja.pdf` (automatically renamed to `data/politicas_da_loja.pdf` without accents and converted to `data/politicas_da_loja.md` in Step 3)
 
-### Passo 1: Criar ambiente virtual e instalar dependências
+### Step 1: Create virtual environment and install dependencies
 
 ```bash
 python3 -m venv .venv
@@ -40,54 +42,54 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Passo 2: Configurar variáveis de ambiente
+### Step 2: Configure environment variables
 
-Copie o template `.env.example` para `.env` e preencha sua chave `GEMINI_API_KEY`:
+Copy the `.env.example` template to `.env` and fill in your `GEMINI_API_KEY`:
 
 ```bash
 cp .env.example .env
 ```
 
-Conteúdo principal do `.env`:
+Main `.env` contents:
 ```env
-GEMINI_API_KEY=sua_chave_do_google_ai_studio
+GEMINI_API_KEY=your_google_ai_studio_key
 GEMINI_MODEL=gemini-3.8-flash
 MAX_TOOL_ITERATIONS=10
 USD_TO_BRL_RATE=5.80
 REFERENCE_DATE=2026-03-25
 
-# Opcional: Token do Melhor Envio (se vazio, usa o simulador determinístico de contingência)
+# Optional: Melhor Envio token (if empty, uses the deterministic contingency simulator)
 MELHOR_ENVIO_TOKEN=
 MELHOR_ENVIO_SANDBOX=false
 ```
 
-### Passo 3: Converter o PDF de Políticas para Markdown via `gemini-3.5-flash-lite`
+### Step 3: Convert the Store Policies PDF to Markdown via `gemini-3.5-flash-lite`
 
-Com a pasta `data/` original na raiz e a `GEMINI_API_KEY` configurada no `.env`, execute o script abaixo para converter `data/politicas_da_loja.pdf` em `data/politicas_da_loja.md` utilizando a leitura multimodal nativa de PDF do modelo `gemini-3.5-flash-lite`:
+With the original `data/` folder in the root directory and `GEMINI_API_KEY` configured in `.env`, run the script below to convert `data/politicas_da_loja.pdf` into `data/politicas_da_loja.md` using the native multimodal PDF reading capability of `gemini-3.5-flash-lite`:
 
 ```bash
 python convert_pdf.py
 ```
 
-*(Nota: Caso você pule este comando, o próprio agente detectará a ausência do `.md` e fará a conversão automática do `.pdf` na primeira inicialização).*
+*(Note: If you skip this command, the agent itself will detect that the `.md` file is missing and automatically convert the `.pdf` upon first startup).*
 
-### Passo 4: Executar a Interface Web (Streamlit) ou a CLI Interativa (Rich)
+### Step 4: Run the Web Interface (Streamlit) or Interactive CLI (Rich)
 
-#### Opção A — Interface Web (Streamlit com Inspetor de Tool Calls)
+#### Option A — Web Interface (Streamlit with Tool Call Inspector)
 ```bash
 streamlit run app.py
 ```
 
-#### Opção B — Interface de Linha de Comando (Rich CLI)
+#### Option B — Command Line Interface (Rich CLI)
 ```bash
-# Modo de conversa contínua
+# Continuous conversation mode
 python cli.py
 
-# Enviar uma mensagem única e exportar a conversa em Markdown
-python cli.py --session teste_rapido -m "Quais opções de violões disponíveis custando até R$1000?" --export conversa.md
+# Send a single message and export the conversation to Markdown
+python cli.py --session quick_test -m "Quais opções de violões disponíveis custando até R$1000?" --export conversa.md
 ```
 
-### Passo 5: Executar a Suíte de Testes Automatizados (`pytest`)
+### Step 5: Run the Automated Test Suite (`pytest`)
 
 ```bash
 python -m pytest -v
@@ -95,156 +97,157 @@ python -m pytest -v
 
 ---
 
-## 2. Arquitetura e Justificativa das Decisões Técnicas
+## 2. Architecture and Rationale for Technical Decisions
 
 ```mermaid
 flowchart TD
-    User(["Cliente (CLI Rich / Streamlit UI)"]) <--> Agent["Agente Empório da Música\n(Gemini 3.8 Flash + System Prompt + Políticas)"]
-    Agent <--> Memory[("Histórico de Sessão\n(SQLite: chat_memory.db)")]
+    User(["Customer (Rich CLI / Streamlit UI)"]) <--> Agent["Empório da Música Agent\n(Gemini 3.8 Flash + System Prompt + Policies)"]
+    Agent <--> Memory[("Session History\n(SQLite: chat_memory.db)")]
     
-    Agent --> ToolRouter{"Function Calling (SDK Nativo google-genai)"}
+    Agent --> ToolRouter{"Function Calling (Native google-genai SDK)"}
     
-    ToolRouter --> T1["tool_buscar_produtos()\nFiltros: categoria, preço, cordas,\nelétrica, busca sem acentos e sinônimos"]
-    ToolRouter --> T2["tool_obter_detalhes_produto()\nPreço, promoções ativas/expiradas,\nestoque, status e alternativas"]
-    ToolRouter --> T3["tool_simular_pagamento_e_frete()\nPIX não cumulativo, parcelamento,\nMotoboy CG ou API Melhor Envio + Fallback"]
-    ToolRouter --> T4["tool_consultar_pedido()\nStatus, rastreio, itens e cálculo\nde elegibilidade de troca/devolução"]
-    ToolRouter --> T5["tool_executar_sql_leitura()\nFallback SQL Read-Only (SELECT)"]
+    ToolRouter --> T1["tool_buscar_produtos()\nFilters: category, price, strings,\nelectric, accent-insensitive search & synonyms"]
+    ToolRouter --> T2["tool_obter_detalhes_produto()\nPrice, active/expired promotions,\nstock, status & alternatives"]
+    ToolRouter --> T3["tool_simular_pagamento_e_frete()\nNon-stackable PIX, installments,\nCG Courier or Melhor Envio API + Fallback"]
+    ToolRouter --> T4["tool_consultar_pedido()\nStatus, tracking, items & return/exchange\neligibility calculation"]
+    ToolRouter --> T5["tool_executar_sql_leitura()\nRead-Only SQL Fallback (SELECT)"]
     
     T1 & T2 & T4 & T5 <--> DB[("SQLite Database\n(emporio_da_musica.db)")]
-    T3 <--> ME["API Melhor Envio v2\n(/me/shipment/calculate)\n+ Fallback Determinístico"]
+    T3 <--> ME["Melhor Envio API v2\n(/me/shipment/calculate)\n+ Deterministic Fallback"]
 ```
 
-### 2.1 Abordagem Híbrida (Tools de Negócio sobre SQLite + Políticas no Contexto + Fallback SQL Read-Only)
-- **Por que não usar apenas Text-to-SQL livre para tudo?**
-  Os CSVs da loja possuem regras de negócio críticas acopladas ao manual de políticas: por exemplo, o desconto de 5% no PIX **não acumula** com promoções ativas (`is_active = 1`), produtos com `status = 'discontinued'` possuem estoque positivo residual que não pode ser vendido (`product_id = 136`), e produtos ativos podem ter `stock_quantity = 0` (`product_id = 96`). Um agente SQL livre facilmente esqueceria um `LEFT JOIN promotions WHERE is_active = 1` ou um filtro de `status`. Ao encapsular essas regras na view `v_products_enriched` e nas *tools* determinísticas (`buscar_produtos`, `obter_detalhes_produto`, `simular_pagamento_e_frete`, `consultar_pedido`), garantimos **zero alucinação aritmética** e **100% de conformidade com a Seção 7.3**.
-- **Por que incluir uma tool de Fallback SQL Read-Only (`executar_sql_leitura`)?**
-  Mantém a flexibilidade de um agente analítico caso o usuário faça perguntas agregadas fora do padrão das tools principais, com *guardrails* estritos (conexão SQLite `mode=ro` e bloqueio via regex contra comandos de modificação).
-- **Por que injetar `politicas_da_loja.md` no System Prompt em vez de RAG vetorial com chunking?**
-  O manual completo de políticas possui apenas **227-235 linhas (~2.500 tokens)**. Em documentos curtos e densos em regras, o *chunking* de um RAG vetorial frequentemente causa erros graves de contexto (ex.: recuperar a Tabela 3 que diz *"parcela mínima de R$ 100,00"* sem recuperar a Seção 3.1 que permite parcelas mínimas de R$ 50,00 até 3x e R$ 80,00 de 4x a 6x). Com janelas de contexto modernas da família Gemini Flash, manter o manual íntegro no *System Prompt* elimina falhas de *retrieval* e reduz a latência.
+### 2.1 Hybrid Approach (Business Tools over SQLite + Full Policies in Context + Read-Only SQL Fallback)
+- **Why not rely solely on free-form Text-to-SQL for everything?**
+  The store's CSV files contain critical business rules coupled with the policy manual: for instance, the 5% PIX discount **does not stack** with active promotions (`is_active = 1`), products with `status = 'discontinued'` have residual positive stock that cannot be sold (`product_id = 136`), and active products may have `stock_quantity = 0` (`product_id = 96`). A free-form SQL agent could easily omit a `LEFT JOIN promotions WHERE is_active = 1` or a `status` filter. By encapsulating these rules in the `v_products_enriched` view and deterministic tools (`buscar_produtos`, `obter_detalhes_produto`, `simular_pagamento_e_frete`, `consultar_pedido`), we guarantee **zero arithmetic hallucination** and **100% compliance with Section 7.3**.
+- **Why include a Read-Only SQL Fallback tool (`executar_sql_leitura`)?**
+  It preserves the flexibility of an analytical agent if the user asks aggregated questions outside the scope of the primary tools, enforced with strict guardrails (SQLite `mode=ro` connection and regex blocking against data modification commands).
+- **Why inject `politicas_da_loja.md` into the System Prompt instead of vector RAG with chunking?**
+  The complete policy manual is only **227–235 lines (~2,500 tokens)**. In short, rule-dense documents, vector RAG chunking frequently causes severe context loss (e.g., retrieving Table 3 which states *"minimum installment of R$ 100.00"* without retrieving Section 3.1 which permits minimum installments of R$ 50.00 for up to 3x and R$ 80.00 for 4x to 6x). With modern context windows in the Gemini Flash family, keeping the entire manual intact in the *System Prompt* eliminates retrieval failures and reduces latency.
 
-### 2.2 Orquestração: SDK Nativo (`google-genai`) + `Pydantic`
-- Optamos por construir o loop de *function calling* diretamente sobre o SDK oficial `google-genai` com contratos de entrada/saída tipados em `Pydantic` (`src/schemas.py`), sem depender de abstrações pesadas como LangChain.
-- Isso torna o controle de estado, o rastreamento de latência de cada ferramenta (`duration_ms`) e a inspeção de chamadas totalmente transparentes e fáceis de testar unitariamente (`tests/`).
+### 2.2 Orchestration: Native SDK (`google-genai`) + `Pydantic`
+- We chose to build the *function calling* loop directly on top of the official `google-genai` SDK with typed input/output contracts in `Pydantic` (`src/schemas.py`), without relying on heavy abstractions such as LangChain.
+- This makes state control, per-tool latency tracking (`duration_ms`), and call inspection completely transparent and easy to unit-test (`tests/`).
 
-### 2.3 Modelo, Provedor e Monitoramento de Custos
-- Configurado por padrão para utilizar `gemini-3.8-flash` (parametrizável via `GEMINI_MODEL` no `.env`), disponibilizando na interface web as opções `gemini-3.8-flash` e `gemini-3.5-flash-lite`.
-- **Contabilização de Tokens e Estimativa de Custo**: A cada turno de conversa, o agente extrai os contadores reais de uso retornados pelo Gemini em `response.usage_metadata` (`prompt_token_count`, `candidates_token_count`, `thoughts_token_count` e `cached_content_token_count`). Como a tabela de preços da API é expressa em dólares por 1 milhão de tokens (`MODEL_PRICING_USD_PER_1M` em `src/config.py`), utilizamos a variável **`USD_TO_BRL_RATE`** (configurável no `.env`, com valor padrão `5.80`) para converter e exibir em tempo real o custo estimado tanto em **Dólares (`US$`)** quanto em **Reais (`R$`)**, tanto por mensagem quanto no acumulado da sessão na barra lateral do Streamlit.
+### 2.3 Model, Provider, and Cost Monitoring
+- Configured by default to use `gemini-3.8-flash` (configurable via `GEMINI_MODEL` in `.env`), offering both `gemini-3.8-flash` and `gemini-3.5-flash-lite` in the web UI.
+- **Token Accounting and Cost Estimation**: On each conversation turn, the agent extracts the actual usage counters returned by Gemini in `response.usage_metadata` (`prompt_token_count`, `candidates_token_count`, `thoughts_token_count`, and `cached_content_token_count`). Since the API pricing table is expressed in USD per 1 million tokens (`MODEL_PRICING_USD_PER_1M` in `src/config.py`), we use the **`USD_TO_BRL_RATE`** variable (configurable in `.env`, defaulting to `5.80`) to convert and display in real time the estimated cost in both **US Dollars (`US$`)** and **Brazilian Reais (`R$`)**, both per message and in the cumulative session total in the Streamlit sidebar.
 
-### 2.4 Persistência de Histórico e Interfaces
-- O histórico de conversas é persistido localmente em SQLite (`chat_memory.db` via `src/memory.py`), registrando tanto as mensagens quanto os metadados das *tool calls* acionadas em cada turno, permitindo retomar sessões e exportá-las diretamente para Markdown.
-
----
-
-## 3. Tratamento de Dados, Casos de Borda e Premissas Assumidas
-
-Durante a análise exploratória dos arquivos em `data/`, mapeamos e tratamos os seguintes casos de borda:
-
-1. **Conflito entre `status` e `stock_quantity` em `products.csv` (Seção 7.3)**:
-   - **`product_id = 96` (*Giannini GF-3D Dreadnought Sunburst*, R$ 799,90)**: Possui `status = active`, mas `stock_quantity = 0`. Nossa view `v_products_enriched` classifica-o como `sem_estoque` (`is_available = 0`), separando-o dos produtos disponíveis e recomendando alternativas em estoque.
-   - **`product_id = 136` (*Ibanez Bass 2X Electric Bass*)**: Possui `stock_quantity = 13`, porém `status = discontinued`. As ferramentas bloqueiam sua oferta para venda imediata, alertam que o modelo saiu de linha e sugerem baixos ativos equivalentes.
-   - **`product_id = 113` (*Shelby SN-7C 7 Cordas*)**: `status = discontinued` e `stock_quantity = 0`.
-   - **`product_id = 130` (*Kala KA-ABP-CTG Barítono Cedar*)**: `status = coming_soon` (`em_breve`) e `stock_quantity = 2`.
-2. **Categorias sem Produtos Cadastrados**:
-   - As categorias `6` (*Instrumentos de Sopro - Madeiras*), `7` (*Instrumentos de Sopro - Metais*) e `8` (*Cordas Orquestrais*) existem em `categories.csv` e no texto institucional da loja, mas têm **0 registros** em `products.csv`. A ferramenta `buscar_produtos` detecta buscas por esses instrumentos e informa com transparência que a categoria está temporariamente sem estoque.
-3. **Promoções Ativas vs. Expiradas (`promotions.csv`) e Regra do PIX (Seções 6.2 e 7.3)**:
-   - De 25 promoções cadastradas, apenas **4 estão ativas (`is_active = 1`)**: produtos `90` (*Crafter HT-100*, 18% OFF), `94` (*Taylor 110e*, 8% OFF), `121` (*Ohana CK-20*, 20% OFF) e `127` (*Kalani KAL-700T*, 10% OFF).
-   - As outras 21 promoções estão expiradas (`is_active = 0`), incluindo o *Takamine GD20* (`product_id = 95`, que teve 12% OFF no passado). A ferramenta `obter_detalhes_produto` retorna tanto o preço vigente quanto o histórico de promoções encerradas para que o agente esclareça dúvidas de clientes com transparência.
-   - O cálculo de PIX aplica 5% de desconto **apenas** quando o produto não possui promoção ativa (`pix_discount_applied = False` em itens promocionais).
-4. **Inconsistências Internas no Documento `politicas_da_loja.md`**:
-   - **Parcelamento (Tabela 3 vs. Seção 3.1)**: A Tabela 3 resume *"Parcela mínima de R$ 100,00"*, enquanto a Seção 3.1 detalha a regra escalonada: até 3x (mín. R$ 50,00), 4x a 6x (mín. R$ 80,00) e 7x a 12x (mín. R$ 100,00). Assumimos a regra detalhada da **Seção 3.1** como a regra operacional de cálculo na ferramenta `simular_pagamento_e_frete`.
-   - **Telefones e E-mail**: O cabeçalho e o item 1.2 informam `(67) 3341-4444`, enquanto a Seção 7 informa `(67) 3321-4500` para WhatsApp; a tabela 1.2 grafou o e-mail com acento (`contato@empóriodamusica.com.br`). Harmonizamos no prompt ambos os números (fixo e WhatsApp) e o e-mail válido sem acento (`contato@emporiodamusica.com.br`).
-5. **Data de Referência para Prazos de Devolução (`orders.csv`)**:
-   - Os pedidos em `orders.csv` possuem datas entre `2025-10-15` e `2026-03-22`. Para tornar a verificação de elegibilidade de **7 dias corridos (arrependimento/preferência)**, **30 dias corridos (troca por defeito na loja)** e **90 dias (garantia legal CDC)** reproduzível, adotamos a data de referência padrão `REFERENCE_DATE=2026-03-25` (configurável via `.env`).
+### 2.4 History Persistence and Interfaces
+- Conversation history is persisted locally in SQLite (`chat_memory.db` via `src/memory.py`), recording both messages and metadata for the *tool calls* triggered on each turn, enabling users to resume sessions and export them directly to Markdown.
 
 ---
 
-## 4. Avaliação Técnica: API do Melhor Envio para Frete
+## 3. Data Handling, Edge Cases, and Assumptions
 
-Avaliamos e implementamos a integração com a API v2 do **Melhor Envio** (`POST /api/v2/me/shipment/calculate`) em `src/shipping.py`:
+During exploratory analysis of the files in `data/`, we mapped and handled the following edge cases:
 
-1. **Aderência às Transportadoras da Loja**: A Seção 5.2 trabalha com **Correios (PAC e SEDEX)** e **Jadlog (.package)**, que correspondem exatamente aos serviços `1,2,3` da API do Melhor Envio, com seguro (`insurance_value`) e rastreamento incluídos.
-2. **Solução para Lacuna de Peso e Dimensões em `products.csv`**: Como o arquivo `products.csv` traz apenas especificações musicais na coluna JSON `specs` (sem `weight`, `width`, `height`, `length`), criamos perfis físicos padrão por categoria (`CATEGORY_SHIPPING_PROFILES` em `src/shipping.py`) e adicionamos o alerta automático da Seção 5.2 para instrumentos de grande porte (baterias, pianos digitais e contrabaixos).
-3. **Tratamento da Regra Local de Campo Grande (Seção 5.1)**: Destinos em Campo Grande/MS são interceptados antes da chamada externa para aplicar a entrega por **motoboy próprio** (1 a 3 dias úteis, **Frete Grátis** para pedidos > R$ 500,00 e **taxa fixa de R$ 35,00** até R$ 500,00).
-4. **Padrão Strategy com *Graceful Fallback***: Caso o avaliador configure `MELHOR_ENVIO_TOKEN` no `.env`, a cotação consulta a API v2 do Melhor Envio em tempo real; caso não possua token configurado (ou sem internet), o módulo utiliza automaticamente a calculadora determinística local calibrada por região de CEP, cubagem e seguro, garantindo que o projeto rode *out-of-the-box*.
-
----
-
-## 5. Exemplos de Interação com o Agente
-
-Na pasta [`examples/`](./examples) estão disponíveis **5 conversas completas** em Markdown (com registro das ferramentas invocadas e argumentos passados pelo agente), geradas e validadas sobre os dados reais do banco:
-
-1. [**`examples/01_catalogo_violoes_ate_1000_e_estoque.md`**](./examples/01_catalogo_violoes_ate_1000_e_estoque.md) — Consulta de violões disponíveis até R$ 1.000,00 (filtrando o *Giannini GF-3D* com estoque zero) e aplicação da regra escalonada de parcelamento (Seção 3.1) e frete grátis em Campo Grande.
-2. [**`examples/02_preco_takamine_gd20_promocao_pix_e_frete.md`**](./examples/02_preco_takamine_gd20_promocao_pix_e_frete.md) — Consulta do *Takamine GD20* (esclarecendo a promoção expirada de 12%), comparação com o *Crafter HT-100* (promoção ativa de 18% OFF), regra de não-cumulatividade do PIX (Seção 6.2) e cotação de frete para Dourados/MS.
-3. [**`examples/03_devolucao_arrependimento_e_troca_pedidos.md`**](./examples/03_devolucao_arrependimento_e_troca_pedidos.md) — Aplicação das políticas de devolução por arrependimento (7 dias) e garantia legal (90 dias) cruzando em tempo real os pedidos `#7` (entregue há 36 dias) e `#8` (em trânsito) de `orders.csv`.
-4. [**`examples/04_produto_descontinuado_e_escopo_acessorios.md`**](./examples/04_produto_descontinuado_e_escopo_acessorios.md) — Atendimento combinando endereço, alerta de horário de sábado (fecha às 13h), bloqueio de produto descontinuado com saldo residual (*Ibanez Bass 2X*, `product_id=136`) com sugestão de similares e redirecionamento educado para acessórios fora do escopo (cordas, palhetas e amplificador).
-5. [**`examples/05_fora_de_escopo_e_categorias_sem_estoque.md`**](./examples/05_fora_de_escopo_e_categorias_sem_estoque.md) — Consulta por instrumentos de categorias sem estoque (*Saxofone* e *Violino*) combinada com *guardrail* contra perguntas fora do escopo (receita culinária e imposto de renda).
-
----
-
-## 6. Limitações Conhecidas e O Que Faria com Mais Tempo
-
-- **Autenticação real do titular do pedido (LGPD)**: Atualmente, a consulta de pedidos valida o número do pedido ou nome/e-mail/telefone informado na conversa e mascara o e-mail no retorno. Em produção no WhatsApp, integraríamos um fluxo de confirmação via token OTP ou validação automática do número de telefone remetente na API oficial do WhatsApp Business.
-- **Busca Semântica Híbrida (BM25 + Embeddings)**: Para um catálogo de 65 itens, a busca normalizada com expansão de sinônimos e filtros estruturados em SQLite tem latência < 5ms e alta precisão. Caso o catálogo crescesse para dezenas de milhares de itens, adicionaríamos busca vetorial (`sqlite-vec` ou `pgvector`) combinada com *Full-Text Search* (FTS5).
-- **Cotação do Dólar em Tempo Real via API do Banco Central (PTAX)**: Atualmente, a conversão do custo estimado de tokens (`USD` $\rightarrow$ `BRL`) utiliza a taxa estática configurada em `USD_TO_BRL_RATE` no `.env`. Com mais tempo, integraríamos uma consulta com cache diário ao endpoint público de Dados Abertos do **Banco Central do Brasil (API Olinda / PTAX)** para obter a cotação comercial do dólar em tempo real, mantendo a variável `USD_TO_BRL_RATE` apenas como *fallback* offline.
-- **Observabilidade e Avaliação Contínua (LLM-as-a-Judge)**: Com mais tempo, adicionaríamos rastreamento OpenTelemetry (Arize Phoenix / Langfuse) e um dataset de avaliação automatizada verificando métricas de *faithfulness* e aderência às políticas a cada alteração de prompt.
+1. **Conflict between `status` and `stock_quantity` in `products.csv` (Section 7.3)**:
+   - **`product_id = 96` (*Giannini GF-3D Dreadnought Sunburst*, R$ 799.90)**: Has `status = active`, but `stock_quantity = 0`. Our `v_products_enriched` view classifies it as `sem_estoque` (`is_available = 0`), separating it from available products and recommending in-stock alternatives.
+   - **`product_id = 136` (*Ibanez Bass 2X Electric Bass*)**: Has `stock_quantity = 13`, but `status = discontinued`. The tools block it from immediate sale, warn that the model has been discontinued, and suggest equivalent active bass guitars.
+   - **`product_id = 113` (*Shelby SN-7C 7 Cordas*)**: `status = discontinued` and `stock_quantity = 0`.
+   - **`product_id = 130` (*Kala KA-ABP-CTG Barítono Cedar*)**: `status = coming_soon` (`em_breve`) and `stock_quantity = 2`.
+2. **Categories with Zero Registered Products**:
+   - Categories `6` (*Instrumentos de Sopro - Madeiras* / Woodwinds), `7` (*Instrumentos de Sopro - Metais* / Brass), and `8` (*Cordas Orquestrais* / Orchestral Strings) exist in `categories.csv` and in the store's institutional text, but have **0 records** in `products.csv`. The `buscar_produtos` tool detects searches for these instruments and transparently informs the user that the category is temporarily out of stock.
+3. **Active vs. Expired Promotions (`promotions.csv`) and the PIX Rule (Sections 6.2 and 7.3)**:
+   - Out of 25 registered promotions, only **4 are active (`is_active = 1`)**: products `90` (*Crafter HT-100*, 18% OFF), `94` (*Taylor 110e*, 8% OFF), `121` (*Ohana CK-20*, 20% OFF), and `127` (*Kalani KAL-700T*, 10% OFF).
+   - The remaining 21 promotions are expired (`is_active = 0`), including the *Takamine GD20* (`product_id = 95`, which previously had 12% OFF). The `obter_detalhes_produto` tool returns both the current price and the history of expired promotions so the agent can transparently clarify customer questions.
+   - The PIX calculation applies a 5% discount **only** when the product does not have an active promotion (`pix_discount_applied = False` on promotional items).
+4. **Internal Inconsistencies in `politicas_da_loja.md`**:
+   - **Installments (Table 3 vs. Section 3.1)**: Table 3 summarizes *"Minimum installment of R$ 100.00"*, whereas Section 3.1 details the tiered rule: up to 3x (min. R$ 50.00), 4x to 6x (min. R$ 80.00), and 7x to 12x (min. R$ 100.00). We adopted the detailed rule from **Section 3.1** as the operational calculation rule in the `simular_pagamento_e_frete` tool.
+   - **Phone Numbers and Email**: The header and item 1.2 state `(67) 3341-4444`, whereas Section 7 states `(67) 3321-4500` for WhatsApp; Table 1.2 spelled the email with an accent (`contato@empóriodamusica.com.br`). We harmonized both numbers (landline and WhatsApp) and the valid unaccented email (`contato@emporiodamusica.com.br`) in the prompt.
+5. **Reference Date for Return Deadlines (`orders.csv`)**:
+   - Orders in `orders.csv` have dates between `2025-10-15` and `2026-03-22`. To make the eligibility check for **7 calendar days (right of withdrawal/preference)**, **30 calendar days (store defect exchange)**, and **90 days (statutory CDC warranty)** reproducible, we adopted the default reference date `REFERENCE_DATE=2026-03-25` (configurable via `.env`).
 
 ---
 
-## 7. Uso de Assistentes de Código e Registro do Workflow
+## 4. Technical Evaluation: Melhor Envio API for Shipping
 
-Este projeto foi desenvolvido em *pair programming* com o **Antigravity IDE 2.6.0** utilizando o modelo **Gemini 4 Argon**.
+We evaluated and implemented the integration with the **Melhor Envio** v2 API (`POST /api/v2/me/shipment/calculate`) in `src/shipping.py`:
 
-### Workflow Utilizado
-1. **Exploração e Diagnóstico Antes do Código**: O assistente foi instruído a ler o enunciado e auditar os arquivos CSV e o manual de políticas antes de escrever qualquer código, revelando as armadilhas de dados (`stock_quantity = 0` em produto ativo, `status = discontinued` com estoque 13, promoções expiradas e conflito entre Tabela 3 e Seção 3.1).
-2. **Alinhamento de Decisões Arquiteturais**: Elaboração de um plano de ação (`implementation_plan.md`) com múltiplas alternativas técnicas e avaliação específica da API do Melhor Envio.
-3. **Desenvolvimento Incremental Orientado a Testes (`pytest`)**: Implementação modular em etapas (ingestão SQLite $\rightarrow$ módulo de frete $\rightarrow$ tools de negócio $\rightarrow$ agente Gemini $\rightarrow$ interfaces CLI/Streamlit $\rightarrow$ exemplos e documentação), validando cada camada com testes automatizados.
-
-### Histórico de Prompts Utilizados
-
-1 - Estou participando de um processo seletivo e preciso fazer um desafio técnico. Leia o arquivo `desafio_tecnico_ai_eng_artef4ct.md` e siga as instruções. Antes de escrever código, monte um plano de ação com algumas opções de decisões técnicas.
-
-2 - Parece legal. Salve o plano de implementação na raiz do projeto.
-No "Modelo / Provedor" podemos utilizar o Google Gemini mais atualizado: "gemini-3.8-flash".
-Para o cálculo do frete, faça a avaliação de utilizar a API do "Melhor Envio".
-
-3 - Legal, funcionou. Mas na interface web do Streamlit, quando o agente responde algo com preço em Reais Brasileiro (R$) está ficando quebrada a formatação.
-
-4 - Vamos remover o fallback model (gemini-2.5-flash). Na lista de modelos disponíveis vamos deixar somente: "gemini-3.8-flash" e "gemini-3.5-flash-lite".
-
-5 - Estou pensando em não commitar a pasta `/data` e deixar para o avaliador usar a pasta original e rodar um comando após a configuração da chave do AI Studio no `.env` que rode um script Python bem simples que manda o PDF para o "gemini-3.5-flash-lite" transformar em Markdown.
-
-6 - O nome original do arquivo de políticas na pasta `/data` é `políticas_da_loja.pdf` (com acento no í). Vamos antes de mais nada, no arquivo `convert_pdf.py` renomear para `politicas_da_loja.pdf` (sem acento).
-
-7 - Onde está a variável de limite de etapas internas?
-
-8 - Sim, vamos expor a variável de limite de etapas internas no `src/config.py` e no `.env.example`.
-
-9 - A API do Gemini retorna o custo da requisição? Quer que eu adicione isso? Sim.
-
-10 - Legal. No Streamlit a contagem de tokens e o custo estão sendo exibidos logo abaixo das respostas mas a área "Consumo da Sessão" na sidebar não está sendo atualizada. Está sendo atualizada somente quando recarrega a página.
-
-11 - Não altere nada, somente responda: de onde você tirou a tabela de preços de referência (`MODEL_PRICING_USD_PER_1M`) no arquivo `/src/config.py`?
-
-12 - No `src/config.py` é necessário a constante `DEFAULT_PRICING_USD_PER_1M` ou podemos usar as informações do `MODEL_PRICING_USD_PER_1M`?
-
-13 - O método `estimate_usage_cost()` parece estar fora de contexto do arquivo `config.py`. Teria outro arquivo melhor para ele estar na pasta `/src` ou teria que criar um arquivo novo?
-
-14 - Vamos adicionar no `README.md` algo sobre a variável `USD_TO_BRL_RATE`.
-
-### Perguntas de Alinhamento Arquitetural
-
-No início o Gemini 4 Argon me perguntou:
-
-- Qual abordagem arquitetural você prefere para o agente e o acesso aos dados/políticas?
-    - Híbrida: Tools de negócio sobre SQLite + Políticas completas no contexto + Fallback SQL read-only
-
-- Qual framework de orquestração em Python você prefere utilizar?
-    - SDK Nativo / Leve + Pydantic (sem LangChain/LangGraph, código puro e direto)
-
-- Qual provedor de LLM você tem chave disponível (ou prefere usar como principal)?
-    - Apenas Google Gemini (ex.: gemini-2.5-flash / gemini-3.8-flash via Google AI Studio)
-
-- Qual interface de interação você prefere entregar?
-    - CLI Interativa (Rich) + Web UI (Streamlit com inspetor de Tool Calls) + Persistência SQLite/JSON
+1. **Alignment with Store Carriers**: Section 5.2 works with **Correios (PAC and SEDEX)** and **Jadlog (.package)**, which correspond directly to services `1,2,3` of the Melhor Envio API, including insurance (`insurance_value`) and tracking.
+2. **Solution for Missing Weight and Dimensions in `products.csv`**: Since `products.csv` only contains musical specifications in the `specs` JSON column (without `weight`, `width`, `height`, `length`), we created default physical profiles per category (`CATEGORY_SHIPPING_PROFILES` in `src/shipping.py`) and added the automatic Section 5.2 alert for oversized instruments (drum kits, digital pianos, and bass guitars).
+3. **Handling the Campo Grande Local Rule (Section 5.1)**: Destinations in Campo Grande/MS are intercepted before the external API call to apply delivery via **in-house courier (motoboy)** (1 to 3 business days, **Free Shipping** for orders > R$ 500.00, and a **fixed R$ 35.00 fee** up to R$ 500.00).
+4. **Strategy Pattern with *Graceful Fallback***: If the evaluator configures `MELHOR_ENVIO_TOKEN` in `.env`, quotes query the Melhor Envio v2 API in real time; if no token is configured (or if offline), the module automatically falls back to the local deterministic calculator calibrated by postal code region, dimensional weight, and insurance, ensuring the project runs *out-of-the-box*.
 
 ---
+
+## 5. Agent Interaction Examples
+
+In the [`examples/`](./examples) directory, **5 complete conversations** are available in Markdown (including logs of the invoked tools and arguments passed by the agent), generated and validated against the actual database:
+
+1. [**`examples/01_catalogo_violoes_ate_1000_e_estoque.md`**](./examples/01_catalogo_violoes_ate_1000_e_estoque.md) — Query for acoustic guitars available up to R$ 1,000.00 (filtering out the zero-stock *Giannini GF-3D*) and applying the tiered installment rule (Section 3.1) and free shipping in Campo Grande.
+2. [**`examples/02_preco_takamine_gd20_promocao_pix_e_frete.md`**](./examples/02_preco_takamine_gd20_promocao_pix_e_frete.md) — Query for the *Takamine GD20* (clarifying the expired 12% promotion), comparison with the *Crafter HT-100* (active 18% OFF promotion), non-stackable PIX rule (Section 6.2), and shipping quote to Dourados/MS.
+3. [**`examples/03_devolucao_arrependimento_e_troca_pedidos.md`**](./examples/03_devolucao_arrependimento_e_troca_pedidos.md) — Application of the withdrawal return (7 days) and statutory warranty (90 days) policies, cross-referencing in real time orders `#7` (delivered 36 days ago) and `#8` (in transit) from `orders.csv`.
+4. [**`examples/04_produto_descontinuado_e_escopo_acessorios.md`**](./examples/04_produto_descontinuado_e_escopo_acessorios.md) — Support interaction combining store address, Saturday hours alert (closes at 1:00 PM), blocking a discontinued product with residual stock (*Ibanez Bass 2X*, `product_id=136`) while suggesting similar active models, and polite redirection for out-of-scope accessories (strings, picks, and amplifier).
+5. [**`examples/05_fora_de_escopo_e_categorias_sem_estoque.md`**](./examples/05_fora_de_escopo_e_categorias_sem_estoque.md) — Query for instruments from out-of-stock categories (*Saxophone* and *Violin*) combined with guardrails against out-of-scope questions (cooking recipe and income tax).
+
+---
+
+## 6. Known Limitations and What I Would Do with More Time
+
+- **Real Authentication of the Order Holder (LGPD)**: Currently, order lookup validates the order number or name/email/phone provided in the conversation and masks the email in the response. In a production WhatsApp environment, we would integrate an OTP token confirmation flow or automatic validation of the sender's phone number via the official WhatsApp Business API.
+- **Hybrid Semantic Search (BM25 + Embeddings)**: For a 65-item catalog, normalized search with synonym expansion and structured filters in SQLite achieves < 5ms latency and high precision. If the catalog scaled to tens of thousands of items, we would add vector search (`sqlite-vec` or `pgvector`) combined with *Full-Text Search* (FTS5).
+- **Real-Time USD Exchange Rate via Central Bank of Brazil API (PTAX)**: Currently, converting estimated token costs (`USD` $\rightarrow$ `BRL`) uses the static rate configured in `USD_TO_BRL_RATE` in `.env`. With more time, we would integrate a daily-cached query to the public Open Data endpoint of the **Central Bank of Brazil (Olinda / PTAX API)** to fetch the real-time commercial USD exchange rate, keeping `USD_TO_BRL_RATE` strictly as an offline fallback.
+- **Observability and Continuous Evaluation (LLM-as-a-Judge)**: With more time, we would add OpenTelemetry tracing (Arize Phoenix / Langfuse) and an automated evaluation dataset checking *faithfulness* and policy compliance metrics on every prompt change.
+
+---
+
+## 7. Coding Assistant Usage and Workflow Log
+
+This project was developed in *pair programming* with **Antigravity IDE 2.6.0** using the **Gemini 4 Argon** model.
+
+### Workflow Used
+1. **Exploration and Diagnosis Before Code**: The assistant was instructed to read the challenge specification and audit the CSV files and policy manual before writing any code, uncovering the data traps (`stock_quantity = 0` on an active product, `status = discontinued` with stock 13, expired promotions, and the conflict between Table 3 and Section 3.1).
+2. **Alignment on Architectural Decisions**: Creation of an action plan (`implementation_plan.md`) presenting multiple technical alternatives and a dedicated evaluation of the Melhor Envio API.
+3. **Test-Driven Incremental Development (`pytest`)**: Modular step-by-step implementation (SQLite ingestion $\rightarrow$ shipping module $\rightarrow$ business tools $\rightarrow$ Gemini agent $\rightarrow$ CLI/Streamlit interfaces $\rightarrow$ examples and documentation), validating each layer with automated tests.
+
+### Prompt History Used
+
+1 - I am participating in a hiring process and need to complete a technical challenge. Read the file `desafio_tecnico_ai_eng_artef4ct.md` and follow the instructions. Before writing any code, put together an action plan with several options for technical decisions.
+
+2 - Looks great. Save the implementation plan in the project root.
+Under "Model / Provider", let's use the latest Google Gemini: "gemini-3.8-flash".
+For shipping calculation, evaluate using the "Melhor Envio" API.
+
+3 - Nice, it worked. However, in the Streamlit web interface, when the agent replies with prices in Brazilian Reais (R$), the formatting is broken.
+
+4 - Let's remove the fallback model (gemini-2.5-flash). In the list of available models, let's keep only: "gemini-3.8-flash" and "gemini-3.5-flash-lite".
+
+5 - I am thinking of not committing the `/data` folder and letting the evaluator use the original folder and run a command after configuring the AI Studio key in `.env` that runs a very simple Python script sending the PDF to "gemini-3.5-flash-lite" to convert it into Markdown.
+
+6 - The original name of the policies file in the `/data` folder is `políticas_da_loja.pdf` (with an accent on the í). First of all, in `convert_pdf.py`, let's rename it to `politicas_da_loja.pdf` (without the accent).
+
+7 - Where is the internal step limit variable located?
+
+8 - Yes, let's expose the internal step limit variable in `src/config.py` and `.env.example`.
+
+9 - Does the Gemini API return the request cost? Do you want me to add that? Yes.
+
+10 - Nice. In Streamlit, the token count and cost are displayed right below the responses, but the "Session Usage" area in the sidebar is not updating. It only updates when the page reloads.
+
+11 - Do not change anything, just answer: where did you get the reference pricing table (`MODEL_PRICING_USD_PER_1M`) in `/src/config.py`?
+
+12 - In `src/config.py`, is the `DEFAULT_PRICING_USD_PER_1M` constant necessary, or can we use the information from `MODEL_PRICING_USD_PER_1M`?
+
+13 - The `estimate_usage_cost()` method seems out of context in `config.py`. Would there be a better file for it in the `/src` folder, or should we create a new file?
+
+14 - Let's add something to `README.md` about the `USD_TO_BRL_RATE` variable.
+
+### Architectural Alignment Questions
+
+At the beginning, Gemini 4 Argon asked me:
+
+- Which architectural approach do you prefer for the agent and data/policy access?
+    - Hybrid: Business tools over SQLite + Full policies in context + Read-only SQL fallback
+
+- Which Python orchestration framework do you prefer to use?
+    - Native / Lightweight SDK + Pydantic (no LangChain/LangGraph, pure and direct code)
+
+- Which LLM provider do you have an API key for (or prefer to use as primary)?
+    - Google Gemini only (e.g., gemini-2.5-flash / gemini-3.8-flash via Google AI Studio)
+
+- Which interaction interface do you prefer to deliver?
+    - Interactive CLI (Rich) + Web UI (Streamlit with Tool Call inspector) + SQLite/JSON Persistence
+
+---
+
