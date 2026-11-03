@@ -120,7 +120,7 @@ flowchart TD
 - **Por que incluir uma tool de Fallback SQL Read-Only (`executar_sql_leitura`)?**
   Mantém a flexibilidade de um agente analítico caso o usuário faça perguntas agregadas fora do padrão das tools principais, com *guardrails* estritos (conexão SQLite `mode=ro` e bloqueio via regex contra comandos de modificação).
 - **Por que injetar `politicas_da_loja.md` no System Prompt em vez de RAG vetorial com chunking?**
-  O manual completo de políticas possui apenas **235 linhas (~2.500 tokens)**. Em documentos curtos e densos em regras, o *chunking* de um RAG vetorial frequentemente causa erros graves de contexto (ex.: recuperar a Tabela 3 que diz *"parcela mínima de R$ 100,00"* sem recuperar a Seção 3.1 que permite parcelas mínimas de R$ 50,00 até 3x e R$ 80,00 de 4x a 6x). Com janelas de contexto modernas da família Gemini Flash, manter o manual íntegro no *System Prompt* elimina falhas de *retrieval* e reduz a latência.
+  O manual completo de políticas possui apenas **227-235 linhas (~2.500 tokens)**. Em documentos curtos e densos em regras, o *chunking* de um RAG vetorial frequentemente causa erros graves de contexto (ex.: recuperar a Tabela 3 que diz *"parcela mínima de R$ 100,00"* sem recuperar a Seção 3.1 que permite parcelas mínimas de R$ 50,00 até 3x e R$ 80,00 de 4x a 6x). Com janelas de contexto modernas da família Gemini Flash, manter o manual íntegro no *System Prompt* elimina falhas de *retrieval* e reduz a latência.
 
 ### 2.2 Orquestração: SDK Nativo (`google-genai`) + `Pydantic`
 - Optamos por construir o loop de *function calling* diretamente sobre o SDK oficial `google-genai` com contratos de entrada/saída tipados em `Pydantic` (`src/schemas.py`), sem depender de abstrações pesadas como LangChain.
