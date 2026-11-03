@@ -185,6 +185,7 @@ Na pasta [`examples/`](./examples) estão disponíveis **5 conversas completas**
 
 - **Autenticação real do titular do pedido (LGPD)**: Atualmente, a consulta de pedidos valida o número do pedido ou nome/e-mail/telefone informado na conversa e mascara o e-mail no retorno. Em produção no WhatsApp, integraríamos um fluxo de confirmação via token OTP ou validação automática do número de telefone remetente na API oficial do WhatsApp Business.
 - **Busca Semântica Híbrida (BM25 + Embeddings)**: Para um catálogo de 65 itens, a busca normalizada com expansão de sinônimos e filtros estruturados em SQLite tem latência < 5ms e alta precisão. Caso o catálogo crescesse para dezenas de milhares de itens, adicionaríamos busca vetorial (`sqlite-vec` ou `pgvector`) combinada com *Full-Text Search* (FTS5).
+- **Cotação do Dólar em Tempo Real via API do Banco Central (PTAX)**: Atualmente, a conversão do custo estimado de tokens (`USD` $\rightarrow$ `BRL`) utiliza a taxa estática configurada em `USD_TO_BRL_RATE` no `.env`. Com mais tempo, integraríamos uma consulta com cache diário ao endpoint público de Dados Abertos do **Banco Central do Brasil (API Olinda / PTAX)** para obter a cotação comercial do dólar em tempo real, mantendo a variável `USD_TO_BRL_RATE` apenas como *fallback* offline.
 - **Observabilidade e Avaliação Contínua (LLM-as-a-Judge)**: Com mais tempo, adicionaríamos rastreamento OpenTelemetry (Arize Phoenix / Langfuse) e um dataset de avaliação automatizada verificando métricas de *faithfulness* e aderência às políticas a cada alteração de prompt.
 
 ---
