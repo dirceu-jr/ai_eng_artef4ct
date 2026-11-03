@@ -22,10 +22,9 @@ MAX_TOOL_ITERATIONS: int = int(os.getenv("MAX_TOOL_ITERATIONS", "10").strip() or
 
 # Tabela de preços de referência por 1 milhão (1M) de tokens em USD
 MODEL_PRICING_USD_PER_1M: dict[str, dict[str, float]] = {
-    "gemini-3.8-flash": {"input": 0.15, "output": 0.60, "cached_input": 0.0375},
-    "gemini-3.5-flash-lite": {"input": 0.075, "output": 0.30, "cached_input": 0.01875},
+    "gemini-3.8-flash": {"input": 0.75, "output": 3.75, "cached_input": 0.075},
+    "gemini-3.5-flash-lite": {"input": 0.30, "output": 2.50, "cached_input": 0.03},
 }
-DEFAULT_PRICING_USD_PER_1M: dict[str, float] = {"input": 0.15, "output": 0.60, "cached_input": 0.0375}
 USD_TO_BRL_RATE: float = float(os.getenv("USD_TO_BRL_RATE", "5.80").strip() or "5.80")
 
 # Data de referência para avaliar prazos de 7 dias (arrependimento) e 30 dias (defeito)
@@ -61,7 +60,7 @@ def estimate_usage_cost(
     llm_calls: int = 1,
 ) -> dict[str, float | int | str]:
     """Calcula o custo estimado em USD e BRL a partir dos contadores do `usage_metadata` do Gemini."""
-    rates = MODEL_PRICING_USD_PER_1M.get(model, DEFAULT_PRICING_USD_PER_1M)
+    rates = MODEL_PRICING_USD_PER_1M.get(model, MODEL_PRICING_USD_PER_1M["gemini-3.8-flash"])
     non_cached_input = max(prompt_tokens - cached_tokens, 0)
     billable_output = output_tokens + thoughts_tokens
 

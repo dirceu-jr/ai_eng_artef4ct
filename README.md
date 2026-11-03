@@ -219,6 +219,10 @@ Para o cálculo do frete, faça a avaliação de utilizar a API do "Melhor Envio
 
 10 - Legal. No Streamlit a contagem de tokens e o custo estão sendo exibidos logo abaixo das respostas mas a área "Consumo da Sessão" na sidebar não está sendo atualizada. Está sendo atualizada somente quando recarrega a página.
 
+11 - Não altere nada, somente responda: de onde você tirou a tabela de preços de referência (`MODEL_PRICING_USD_PER_1M`) no arquivo `/src/config.py`?
+
+12 - No `src/config.py` é necessário a constante `DEFAULT_PRICING_USD_PER_1M` ou podemos usar as informações do `MODEL_PRICING_USD_PER_1M`?
+
 ### Perguntas de Alinhamento Arquitetural
 
 - Qual abordagem arquitetural você prefere para o agente e o acesso aos dados/políticas?
