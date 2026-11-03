@@ -126,7 +126,7 @@ flowchart TD
 - Optamos por construir o loop de *function calling* diretamente sobre o SDK oficial `google-genai` com contratos de entrada/saída tipados em `Pydantic` (`src/schemas.py`), sem depender de abstrações pesadas como LangChain.
 - Isso torna o controle de estado, o rastreamento de latência de cada ferramenta (`duration_ms`) e a inspeção de chamadas totalmente transparentes e fáceis de testar unitariamente (`tests/`).
 
-### 2.3 Modelo, Provedor e Monitoramento de Custos (`USD_TO_BRL_RATE`)
+### 2.3 Modelo, Provedor e Monitoramento de Custos
 - Configurado por padrão para utilizar `gemini-3.8-flash` (parametrizável via `GEMINI_MODEL` no `.env`), disponibilizando na interface web as opções `gemini-3.8-flash` e `gemini-3.5-flash-lite`.
 - **Contabilização de Tokens e Estimativa de Custo**: A cada turno de conversa, o agente extrai os contadores reais de uso retornados pelo Gemini em `response.usage_metadata` (`prompt_token_count`, `candidates_token_count`, `thoughts_token_count` e `cached_content_token_count`). Como a tabela de preços da API é expressa em dólares por 1 milhão de tokens (`MODEL_PRICING_USD_PER_1M` em `src/config.py`), utilizamos a variável **`USD_TO_BRL_RATE`** (configurável no `.env`, com valor padrão `5.80`) para converter e exibir em tempo real o custo estimado tanto em **Dólares (`US$`)** quanto em **Reais (`R$`)**, tanto por mensagem quanto no acumulado da sessão na barra lateral do Streamlit.
 
