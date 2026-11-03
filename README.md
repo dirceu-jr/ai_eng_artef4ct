@@ -223,6 +223,8 @@ Para o cálculo do frete, faça a avaliação de utilizar a API do "Melhor Envio
 
 12 - No `src/config.py` é necessário a constante `DEFAULT_PRICING_USD_PER_1M` ou podemos usar as informações do `MODEL_PRICING_USD_PER_1M`?
 
+13 - O método `estimate_usage_cost()` parece estar fora de contexto do arquivo `config.py`. Teria outro arquivo melhor para ele estar na pasta `/src` ou teria que criar um arquivo novo?
+
 ### Perguntas de Alinhamento Arquitetural
 
 - Qual abordagem arquitetural você prefere para o agente e o acesso aos dados/políticas?

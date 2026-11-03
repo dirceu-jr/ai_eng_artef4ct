@@ -51,37 +51,4 @@ def get_reference_date() -> date:
         return date(2026, 3, 25)
 
 
-def estimate_usage_cost(
-    model: str,
-    prompt_tokens: int,
-    output_tokens: int,
-    thoughts_tokens: int = 0,
-    cached_tokens: int = 0,
-    llm_calls: int = 1,
-) -> dict[str, float | int | str]:
-    """Calcula o custo estimado em USD e BRL a partir dos contadores do `usage_metadata` do Gemini."""
-    rates = MODEL_PRICING_USD_PER_1M.get(model, MODEL_PRICING_USD_PER_1M["gemini-3.8-flash"])
-    non_cached_input = max(prompt_tokens - cached_tokens, 0)
-    billable_output = output_tokens + thoughts_tokens
-
-    cost_usd = (
-        (non_cached_input / 1_000_000) * rates["input"]
-        + (cached_tokens / 1_000_000) * rates["cached_input"]
-        + (billable_output / 1_000_000) * rates["output"]
-    )
-    cost_brl = cost_usd * USD_TO_BRL_RATE
-    total_tokens = prompt_tokens + output_tokens + thoughts_tokens
-
-    return {
-        "model": model,
-        "llm_calls": llm_calls,
-        "prompt_tokens": prompt_tokens,
-        "output_tokens": output_tokens,
-        "thoughts_tokens": thoughts_tokens,
-        "cached_tokens": cached_tokens,
-        "total_tokens": total_tokens,
-        "estimated_cost_usd": round(cost_usd, 6),
-        "estimated_cost_brl": round(cost_brl, 6),
-    }
-
 
