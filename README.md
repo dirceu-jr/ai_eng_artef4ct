@@ -8,13 +8,13 @@ O agente combina **Function Calling determinístico sobre SQLite**, **injeção 
 
 ## Sumário
 
-1. [Como Executar o Projeto](#-1-como-executar-o-projeto)
-2. [Arquitetura e Justificativa das Decisões Técnicas](#-2-arquitetura-e-justificativa-das-decisões-técnicas)
-3. [Tratamento de Dados, Casos de Borda e Premissas Assumidas](#-3-tratamento-de-dados-casos-de-borda-e-premissas-assumidas)
-4. [Avaliação Técnica: API do Melhor Envio para Frete](#-4-avaliação-técnica-api-do-melhor-envio-para-frete)
-5. [Exemplos de Interação com o Agente](#-5-exemplos-de-interação-com-o-agente)
-6. [Limitações Conhecidas e Próximos Passos](#-6-limitações-conhecidas-e-o-que-faria-com-mais-tempo)
-7. [Uso de Assistentes de Código e Registro do Workflow](#-7-uso-de-assistentes-de-código-e-registro-do-workflow)
+1. [Como Executar o Projeto](#1-como-executar-o-projeto)
+2. [Arquitetura e Justificativa das Decisões Técnicas](#2-arquitetura-e-justificativa-das-decisões-técnicas)
+3. [Tratamento de Dados, Casos de Borda e Premissas Assumidas](#3-tratamento-de-dados-casos-de-borda-e-premissas-assumidas)
+4. [Avaliação Técnica: API do Melhor Envio para Frete](#4-avaliação-técnica-api-do-melhor-envio-para-frete)
+5. [Exemplos de Interação com o Agente](#5-exemplos-de-interação-com-o-agente)
+6. [Limitações Conhecidas e Próximos Passos](#6-limitações-conhecidas-e-o-que-faria-com-mais-tempo)
+7. [Uso de Assistentes de Código e Registro do Workflow](#7-uso-de-assistentes-de-código-e-registro-do-workflow)
 
 ---
 
